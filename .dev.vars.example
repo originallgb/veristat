@@ -1,0 +1,13 @@
+# Copy to .dev.vars for local dev. NEVER commit .dev.vars.
+# ── YOUR CREDENTIALS GO HERE (see README "What you must supply") ──
+
+# Panel vendor API keys (required for live consensus_check)
+ANTHROPIC_API_KEY=sk-ant-REPLACE_ME
+OPENAI_API_KEY=sk-REPLACE_ME
+GOOGLE_API_KEY=AIza-REPLACE_ME
+
+# Random secret for signing price quotes (generate: openssl rand -hex 32)
+QUOTE_SIGNING_KEY=REPLACE_WITH_RANDOM_HEX
+
+# Override the receiving wallet locally if desired
+# PAY_TO_ADDRESS=0xYourAddress

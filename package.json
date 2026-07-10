@@ -1,0 +1,40 @@
+{
+  "name": "veristat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc",
+    "test": "vitest run",
+    "db:migrate:local": "wrangler d1 migrations apply veristat --local",
+    "db:migrate": "wrangler d1 migrations apply veristat --remote"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@x402/core": "^2.17.0",
+    "@x402/evm": "^2.17.0",
+    "agents": "^0.17.3",
+    "hono": "^4.12.29",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260710.1",
+    "@types/node": "^26.1.1",
+    "typescript": "^7.0.2",
+    "viem": "^2.55.0",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.110.0"
+  },
+  "allowScripts": {
+    "workerd@1.20260708.1": true,
+    "esbuild@0.28.1": true,
+    "sharp@0.34.5": true,
+    "core-js-pure@3.49.0": true
+  }
+}

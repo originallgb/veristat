@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "veristat",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-11",
+  "compatibility_flags": ["nodejs_compat"],
+  // Spec §8: upgrade to Workers Paid before first mainnet call; these limits
+  // require the paid plan. subrequests capped as a runaway guard.
+  "limits": { "cpu_ms": 30000 },
+  "durable_objects": {
+    "bindings": [{ "class_name": "VeristatMCP", "name": "VeristatMCP" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["VeristatMCP"] }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "veristat",
+      // PLACEHOLDER: replace with the id printed by `npx wrangler d1 create veristat`
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ],
+  "vars": {
+    // base-sepolia for dev/testnet; set to "eip155:8453" (Base mainnet) for launch
+    "NETWORK": "eip155:84532",
+    // Facilitator abstraction (spec §3): x402.org for testnet dev.
+    // Mainnet launch: Coinbase CDP facilitator URL. Later: Cloudflare Gateway.
+    "FACILITATOR_URL": "https://x402.org/facilitator",
+    // PLACEHOLDER: your USDC receiving address on Base — supply your own wallet
+    "PAY_TO_ADDRESS": "0x0000000000000000000000000000000000000000",
+    "PANEL_MODEL_ANTHROPIC": "claude-sonnet-5",
+    "PANEL_MODEL_OPENAI": "gpt-5-mini",
+    "PANEL_MODEL_GOOGLE": "gemini-2.5-flash",
+    "SYNTHESIS_MODEL": "claude-sonnet-5"
+  }
+  // Secrets (set via `npx wrangler secret put NAME`, or .dev.vars locally):
+  //   ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY, QUOTE_SIGNING_KEY
+  //   (optionally CDP_API_KEY_ID / CDP_API_KEY_SECRET if the mainnet
+  //    facilitator requires auth — wired through FACILITATOR_URL headers)
+}
