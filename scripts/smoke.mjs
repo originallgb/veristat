@@ -2,11 +2,14 @@
 // get_sample_verdict (free) → consensus_check unpaid (expect 402 payload).
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { mcpFetch } from "./mcp-fetch.mjs";
 
 const BASE = process.env.VERISTAT_URL ?? "http://localhost:8787/mcp";
 
 const client = new Client({ name: "smoke", version: "0.0.0" });
-await client.connect(new StreamableHTTPClientTransport(new URL(BASE)));
+await client.connect(
+  new StreamableHTTPClientTransport(new URL(BASE), { fetch: mcpFetch })
+);
 
 const tools = await client.listTools();
 console.log("TOOLS:", tools.tools.map((t) => t.name).join(", "));

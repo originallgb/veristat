@@ -11,6 +11,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { withX402Client } from "agents/x402";
 import { toClientEvmSigner } from "@x402/evm";
 import { privateKeyToAccount } from "viem/accounts";
+import { mcpFetch } from "./mcp-fetch.mjs";
 
 const pk = process.env.BUYER_PRIVATE_KEY;
 if (!pk) {
@@ -23,7 +24,9 @@ const content =
 
 const BASE = process.env.VERISTAT_URL ?? "http://localhost:8787/mcp";
 const client = new Client({ name: "paid-caller", version: "0.0.0" });
-await client.connect(new StreamableHTTPClientTransport(new URL(BASE)));
+await client.connect(
+  new StreamableHTTPClientTransport(new URL(BASE), { fetch: mcpFetch })
+);
 
 const paying = withX402Client(client, {
   network: process.env.NETWORK ?? "eip155:84532",

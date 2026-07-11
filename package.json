@@ -27,6 +27,7 @@
     "@cloudflare/workers-types": "^5.20260710.1",
     "@types/node": "^26.1.1",
     "typescript": "^7.0.2",
+    "undici": "^8.7.0",
     "viem": "^2.55.0",
     "vitest": "^4.1.10",
     "wrangler": "^4.110.0"
