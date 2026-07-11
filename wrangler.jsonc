@@ -15,8 +15,7 @@
     {
       "binding": "DB",
       "database_name": "veristat",
-      // PLACEHOLDER: replace with the id printed by `npx wrangler d1 create veristat`
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+      "database_id": "63379492-64ce-48a0-b39a-82aa54726dae"
     }
   ],
   "vars": {
