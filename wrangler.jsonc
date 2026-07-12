@@ -31,7 +31,7 @@
     // Public /mcp URL — advertised as the 402 resource and catalogued by the
     // Bazaar on first CDP settlement (docs/research/bazaar-listing.md).
     // Set to the deployed workers.dev URL; empty disables discovery advertisement.
-    "PUBLIC_URL": "",
+    "PUBLIC_URL": "https://veristat.grant-23a.workers.dev/mcp",
     "PANEL_MODEL_ANTHROPIC": "claude-sonnet-5",
     "PANEL_MODEL_OPENAI": "gpt-5-mini",
     "PANEL_MODEL_GOOGLE": "gemini-2.5-flash",
