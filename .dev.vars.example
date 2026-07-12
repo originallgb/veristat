@@ -11,3 +11,8 @@ QUOTE_SIGNING_KEY=REPLACE_WITH_RANDOM_HEX
 
 # Override the receiving wallet locally if desired
 # PAY_TO_ADDRESS=0xYourAddress
+
+# CDP facilitator auth — only needed when FACILITATOR_URL points at
+# api.cdp.coinbase.com (Bazaar rehearsal / mainnet). From portal.cdp.coinbase.com.
+# CDP_API_KEY_ID=REPLACE_ME
+# CDP_API_KEY_SECRET=REPLACE_ME

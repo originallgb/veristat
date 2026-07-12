@@ -14,8 +14,17 @@ export class MockFacilitator implements FacilitatorClient {
   settleCalls: { payload: PaymentPayload; requirements: PaymentRequirements }[] = [];
   failVerify = false;
   failSettle = false;
+  /** EIP-3009 nonces already settled on the mock "chain" — replayed
+   *  authorizations fail verify, as they would against a real facilitator. */
+  private settledNonces = new Set<string>();
 
   constructor(private network: string) {}
+
+  private nonceOf(payload: PaymentPayload): string {
+    const auth = (payload.payload as { authorization?: { nonce?: string } })
+      ?.authorization;
+    return auth?.nonce ?? JSON.stringify(payload.payload);
+  }
 
   async getSupported() {
     return {
@@ -28,6 +37,8 @@ export class MockFacilitator implements FacilitatorClient {
   async verify(payload: PaymentPayload, requirements: PaymentRequirements) {
     this.verifyCalls.push({ payload, requirements });
     if (this.failVerify) return { isValid: false, invalidReason: "MOCK_REJECTED" };
+    if (this.settledNonces.has(this.nonceOf(payload)))
+      return { isValid: false, invalidReason: "NONCE_ALREADY_USED" };
     const payer = (payload.payload as { authorization?: { from?: string } })
       ?.authorization?.from;
     return { isValid: true, payer };
@@ -43,6 +54,7 @@ export class MockFacilitator implements FacilitatorClient {
         network: this.network as never
       };
     }
+    this.settledNonces.add(this.nonceOf(payload));
     return {
       success: true,
       transaction: `0xmock${this.settleCalls.length.toString(16).padStart(8, "0")}`,

@@ -1,0 +1,35 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm test:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run db:migrate:local:*)",
+      "Bash(npm install:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx wrangler d1 migrations apply veristat --local:*)",
+      "Bash(node scripts/smoke.mjs:*)",
+      "Bash(node scripts/e2e.mjs:*)",
+      "Bash(node scripts/check-bazaar.mjs:*)",
+      "Bash(node scripts/dashboard.mjs:*)",
+      "Bash(node scripts/make-test-wallet.mjs:*)"
+    ],
+    "deny": [
+      "Read(.dev.vars)",
+      "Read(.wallets/**)"
+    ]
+  }
+}

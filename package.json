@@ -16,9 +16,11 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@coinbase/cdp-sdk": "^1.52.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@x402/core": "^2.17.0",
     "@x402/evm": "^2.17.0",
+    "@x402/extensions": "^2.18.0",
     "agents": "^0.17.3",
     "hono": "^4.12.29",
     "zod": "^4.4.3"

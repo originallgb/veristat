@@ -8,6 +8,12 @@ vendor), synthesizes a structured verdict (consensus, agreements, contradictions
 dissent), and returns it. Payment per call via x402 (USDC on Base). The payment
 is the credential — buyers need no vendor accounts.
 
+## Docs
+
+`docs/SPEC.md` (decided build spec) · `docs/STRATEGY.md` (why + kill condition)
+· `docs/ROADMAP.md` (launch phases + status) · `docs/TESTING.md` (test pyramid,
+wallet runbook) · `docs/RUNBOOK.md` (ops).
+
 ## Tools
 
 | Tool | Price | Status |
@@ -41,6 +47,8 @@ is the credential — buyers need no vendor accounts.
 | What | Where | How |
 |---|---|---|
 | USDC receiving wallet | `PAY_TO_ADDRESS` in `wrangler.jsonc` (currently `0x0000…`) | your address on Base |
+| Public endpoint URL | `PUBLIC_URL` in `wrangler.jsonc` (currently empty) | the deployed `/mcp` URL — what the Bazaar catalogs |
+| CDP API keys | `CDP_API_KEY_ID` / `CDP_API_KEY_SECRET` secrets | portal.cdp.coinbase.com — required once `FACILITATOR_URL` is the CDP facilitator (Bazaar rehearsal + mainnet) |
 | Panel API keys | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY` | local: `.dev.vars` (copy `.dev.vars.example`); prod: `npx wrangler secret put <NAME>` |
 | Quote signing secret | `QUOTE_SIGNING_KEY` | `openssl rand -hex 32`, same channels as above |
 | D1 database id | `database_id` in `wrangler.jsonc` (currently `REPLACE_WITH_D1_DATABASE_ID`) | printed by `npx wrangler d1 create veristat` |
@@ -51,13 +59,20 @@ is the credential — buyers need no vendor accounts.
 
 ```sh
 npm install
-npm test                                  # 402→verify→settle cycle vs mock facilitator
+npm test                                  # 402→verify→settle cycle + negative paths vs mock facilitator
 cp .dev.vars.example .dev.vars            # then fill in real keys
 npx wrangler d1 migrations apply veristat --local
 npm run dev                               # http://localhost:8787 (/mcp, /health, /price)
 node scripts/smoke.mjs                    # free tool + unpaid 402 challenge (no keys needed)
-BUYER_PRIVATE_KEY=0x... node scripts/paid-call.mjs "claim to verify"   # paid e2e (needs panel keys too)
+E2E_UNPAID_ONLY=1 node scripts/e2e.mjs    # full unpaid matrix, exits nonzero on failure
+node scripts/make-test-wallet.mjs         # buyer key → .wallets/, prints Circle faucet link
+BUYER_PRIVATE_KEY=$(cat .wallets/buyer.key) node scripts/e2e.mjs   # paid e2e (needs panel keys too)
 ```
+
+Full testing strategy (wallet roles, negative-path matrix, Bazaar listing
+verification): `docs/TESTING.md`. Ops: `docs/RUNBOOK.md`
+(`node scripts/dashboard.mjs` is the dashboard,
+`node scripts/check-bazaar.mjs` answers "are we actually listed").
 
 ## Deploy (testnet first)
 

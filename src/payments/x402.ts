@@ -34,6 +34,7 @@ import type {
   Network
 } from "@x402/core/types";
 import { registerExactEvmScheme } from "@x402/evm/exact/server";
+import { bazaarResourceServerExtension } from "@x402/extensions/bazaar";
 import {
   computePriceUSD,
   hashRequest,
@@ -50,6 +51,13 @@ export interface PaymentGateConfig {
   /** Injectable facilitator — HTTPFacilitatorClient in prod, mock in tests. */
   facilitator?: FacilitatorClient;
   facilitatorUrl?: string;
+  /**
+   * Public URL of this MCP endpoint (e.g. https://veristat.<sub>.workers.dev/mcp).
+   * Used as the 402 `resource.url`, which the client echoes as
+   * `paymentPayload.resource` — the URL the Bazaar catalogs us under. Falls
+   * back to x402://<tool> when unset (payments work; discovery listing won't).
+   */
+  publicUrl?: string;
   /** Fired after successful settlement — receipt logging (never blocks response). */
   onSettled?: (info: {
     tool: string;
@@ -81,6 +89,16 @@ export class PaymentGate {
       });
     this.resourceServer = new x402ResourceServer(facilitator);
     registerExactEvmScheme(this.resourceServer);
+    // Bazaar discovery (docs/research/bazaar-listing.md): the extension's
+    // echo validation runs for tools that declare discovery metadata.
+    this.resourceServer.registerExtension(bazaarResourceServerExtension);
+    // The quote token is re-signed on every 402, so the client's echo always
+    // carries the previous token — exclude it from echo validation; expiry
+    // and integrity are enforced separately via verifyQuote.
+    this.resourceServer.registerExtension({
+      key: "veristat/quote",
+      dynamicInfoFields: ["token"]
+    });
   }
 
   private ensureInitialized(): Promise<void> {
@@ -110,7 +128,10 @@ export class PaymentGate {
       args: Parameters<ToolCallback<Args>>[0],
       settlement: SettlementInfo,
       extra: Parameters<ToolCallback<Args>>[1]
-    ) => ReturnType<ToolCallback<Args>>
+    ) => ReturnType<ToolCallback<Args>>,
+    /** Bazaar discovery declaration (declareDiscoveryExtension output),
+     *  advertised in the 402 `extensions` and echoed to the facilitator. */
+    discovery?: Record<string, unknown>
   ): RegisteredTool {
     const network = this.cfg.network as Network;
 
@@ -156,7 +177,9 @@ export class PaymentGate {
         }
 
         const resourceInfo = {
-          url: `x402://${name}`,
+          // The client echoes this as paymentPayload.resource — the URL the
+          // Bazaar catalogs on first settlement (docs/research/bazaar-listing.md)
+          url: this.cfg.publicUrl ?? `x402://${name}`,
           description,
           mimeType: "application/json"
         };
@@ -183,6 +206,7 @@ export class PaymentGate {
             resource: resourceInfo,
             accepts: requirements,
             extensions: {
+              ...(discovery ?? {}),
               "veristat/quote": { token: quoteToken, priceUSD, ttlMs: QUOTE_TTL_MS }
             },
             ...extraFields
@@ -221,11 +245,22 @@ export class PaymentGate {
         );
         if (!matchingReq) return paymentRequired("INVALID_PAYMENT");
 
+        // Echoed extensions (bazaar declaration, quote) must preserve what we
+        // advertised — a tampered discovery echo could poison the catalog.
+        const echoCheck = this.resourceServer.validateExtensions(
+          paymentRequired()._meta["x402/error"] as never,
+          paymentPayload
+        );
+        if (!echoCheck.valid) {
+          return paymentRequired(echoCheck.invalidReason ?? "EXTENSION_ECHO_MISMATCH");
+        }
+
         let payer: string | undefined;
         try {
           const vr = await this.resourceServer.verifyPayment(
             paymentPayload,
-            matchingReq
+            matchingReq,
+            discovery
           );
           if (!vr.isValid) {
             return paymentRequired(vr.invalidReason ?? "INVALID_PAYMENT", {
@@ -263,7 +298,8 @@ export class PaymentGate {
           try {
             const s = await this.resourceServer.settlePayment(
               paymentPayload,
-              matchingReq
+              matchingReq,
+              discovery
             );
             if (s.success) {
               result._meta ??= {};
