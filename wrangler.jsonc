@@ -26,8 +26,9 @@
     // (requires CDP_API_KEY_ID / CDP_API_KEY_SECRET secrets — docs/ROADMAP.md Phase 2).
     // Later: Cloudflare Monetization Gateway.
     "FACILITATOR_URL": "https://x402.org/facilitator",
-    // PLACEHOLDER: your USDC receiving address on Base — supply your own wallet
-    "PAY_TO_ADDRESS": "0x0000000000000000000000000000000000000000",
+    // Testnet receiver (.wallets/payto.key throwaway). Mainnet cutover: replace
+    // with the operator's real Base USDC address (docs/ROADMAP.md Phase 3).
+    "PAY_TO_ADDRESS": "0x86CdAe1A22458442BaB9E10216a7E96b606d3635",
     // Public /mcp URL — advertised as the 402 resource and catalogued by the
     // Bazaar on first CDP settlement (docs/research/bazaar-listing.md).
     // Set to the deployed workers.dev URL; empty disables discovery advertisement.
