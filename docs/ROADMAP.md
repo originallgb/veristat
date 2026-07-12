@@ -126,6 +126,11 @@ session read (`docs/research/bazaar-listing.md`).
       refunds, 5-panel live). Gate failed → **stop; write the postmortem**
       (`docs/STRATEGY.md`, kill condition).
 
+## Post-launch backlog
+
+- [ ] Workers AI for eval graders / cheap tier / AI Gateway — feasibility in
+      `docs/research/workers-ai-models.md`; do not touch the paid panel.
+
 ## Standing constraints
 
 - Settlement only after tool success — a failed panel never charges. Any

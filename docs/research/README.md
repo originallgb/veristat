@@ -7,6 +7,8 @@ anything older than a month before acting on it.
 - `bazaar-listing.md` — how CDP Bazaar cataloging actually works (settlement-
   triggered, discovery extension, EXTENSION-RESPONSES pitfalls)
 - `mcp-registry-publishing.md` — official MCP registry publish flow
+- `workers-ai-models.md` — Workers AI feasibility (eval graders / cheap tier /
+  AI Gateway; not a paid-panel replacement)
 
 ## Pending: Readwise distillation
 
