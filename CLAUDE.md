@@ -10,8 +10,9 @@ Start here when picking up work:
 
 - `docs/ROADMAP.md` — launch phases, current status checkboxes, and which items are blocked on operator-supplied accounts/wallets.
 - `docs/TESTING.md` — test pyramid, wallet setup runbook, x402 negative-path matrix.
-- `docs/RUNBOOK.md` — ops: secrets, D1 dashboard queries, facilitator swap, incidents.
+- `docs/RUNBOOK.md` — ops: secrets, D1 dashboard queries, facilitator swap, incidents, CI/CD.
 - `docs/STRATEGY.md` — why this exists, pricing rationale, the kill condition.
+- `docs/ARCHITECTURE.md` — Cloudflare architecture diagram + payment-flow sequence diagram (happy path + tested failure branches).
 
 ## Deploy state
 

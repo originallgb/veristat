@@ -131,6 +131,12 @@ session read (`docs/research/bazaar-listing.md`).
 
 - [ ] Workers AI for eval graders / cheap tier / AI Gateway — feasibility in
       `docs/research/workers-ai-models.md`; do not touch the paid panel.
+- [ ] Coding-tool plugin distribution: Cloudflare's [pay-from-coding-tools](
+      https://developers.cloudflare.com/agents/tools/payments/x402/pay-with-tool-plugins/)
+      lets Claude Code / OpenCode call x402 endpoints directly from tool
+      plugins — a zero-integration channel for coding agents to call
+      `consensus_check` mid-session. Evaluate after the Bazaar/registry
+      channels in Phase 5 are running (`docs/STRATEGY.md` Distribution).
 
 ## Standing constraints
 
