@@ -43,7 +43,7 @@ session read (`docs/research/bazaar-listing.md`).
 - [x] `.claude/settings.json` permissions allowlist + SessionStart hook
       (npm install + local D1 migrations) + `verify-paid-call` skill
 - [x] `docs/`: SPEC, STRATEGY, ROADMAP, TESTING, RUNBOOK, research notes
-- [ ] **USER** (optional): approve one Readwise MCP call in a Claude session so
+- [x] **USER** (optional): approve one Readwise MCP call in a Claude session so
       saved x402/MCP docs can be distilled into `docs/research/`
 
 ## Phase 1 — Test hardening (see docs/TESTING.md for the full matrix)
