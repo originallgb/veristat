@@ -15,9 +15,15 @@ for that position.
 
 ## Landscape calibration (verified 2026-07-10)
 
-- Coinbase x402 Bazaar: ~100 resources total; dominated by crypto-market data;
-  median price $0.001, p90 $0.10. **Exa and Tavily already sell search per-call
-  via x402** — serious API companies think the channel is worth listing in.
+- Coinbase x402 Bazaar: ~100 resources read at the time; dominated by
+  crypto-market data; median price $0.001, p90 $0.10. **Exa and Tavily already
+  sell search per-call via x402** — serious API companies think the channel is
+  worth listing in.
+  **Correction (2026-07-12):** that ~100 was one page of an offset-paginated
+  API; the catalog's true total is **~25,500 resources** and items carry a
+  `quality` ranking field (`docs/research/bazaar-listing.md`). Shelf space is
+  crowded; discoverability is a ranking/search problem, not a scarcity one.
+  The ship gate below is unchanged — it exists to answer exactly this.
 - Official MCP registry: live; x402-paid servers exist but are a rounding error.
 - The only population demonstrably *spending* through these rails is trading
   bots buying market data, because their willingness-to-pay is denominated in

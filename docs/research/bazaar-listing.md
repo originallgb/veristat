@@ -41,6 +41,25 @@ GitBook, x402-foundation GitHub).
   `transferWithAuthorization`; the facilitator submits and pays gas.
   Faucet: https://faucet.circle.com (20 USDC / address / 2h, Base Sepolia).
 
+## Corrected market calibration (2026-07-12, live probe)
+
+The strategy session's "~100 Bazaar listings" figure was **one page of an
+offset-paginated API**, not the total. Live probe of
+`GET /v2/x402/discovery/resources`:
+
+- `pagination.total` = **25,481 resources** (limit/offset pagination,
+  default page 20, max observed 100)
+- items carry a `quality` field — CDP is already ranking listings
+- x402.org's facilitator exposes **no public discovery catalog** (only
+  /verify, /settle, /supported — the documented test-catalog path 404s), so
+  testnet listing rehearsal must go through the CDP facilitator + keys.
+
+Consequences: shelf space is far more crowded than the thesis assumed;
+discoverability will depend on search/quality ranking and the registry-facing
+description, not on being one of a hundred. The demand-side ship gate
+(10 organic wallets/30d) is unchanged — it was designed to answer exactly
+this uncertainty.
+
 ## Discovery consumption (how buyers find us)
 
 - Machine-readable catalog + an MCP endpoint on the discovery API

@@ -28,8 +28,11 @@ discovery extension. Requirements (verified against CDP docs, July 2026):
    results — listing is not permanent; organic or canary traffic keeps it live.
 
 Testnet rehearsal is supported (Base Sepolia through the CDP facilitator with
-the same keys), and the independent x402.org facilitator maintains a separate
-test catalog at `https://x402.org/facilitator/discovery/resources`.
+the same keys). The x402.org facilitator exposes **no** public discovery
+catalog (verified 2026-07-12 — only /verify, /settle, /supported), so the
+listing rehearsal requires CDP keys; x402.org remains fine for plain payment
+testing. Note the catalog is ~25,500 resources, not the ~100 the strategy
+session read (`docs/research/bazaar-listing.md`).
 
 ---
 

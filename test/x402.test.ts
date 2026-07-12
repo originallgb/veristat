@@ -8,6 +8,7 @@ import { toClientEvmSigner } from "@x402/evm";
 import { privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
 import { PaymentGate, type SettlementInfo } from "../src/payments/x402";
+import { hashRequest, signQuote } from "../src/payments/quoting";
 import { MockFacilitator } from "./mock_facilitator";
 
 const NETWORK = "eip155:84532";
@@ -70,10 +71,17 @@ async function setup(opts?: { failSettle?: boolean; toolFails?: boolean }) {
   await Promise.all([server.connect(st), client.connect(ct)]);
 
   // withX402Client mutates callTool in place — exercise the unpaid path via
-  // a raw request that bypasses the payment wrapper
-  const rawCall = (args: Record<string, unknown>) =>
+  // a raw request that bypasses the payment wrapper. `meta` lets tests attach
+  // hand-crafted payment payloads and quote echoes.
+  const rawCall = (
+    args: Record<string, unknown>,
+    meta?: Record<string, unknown>
+  ) =>
     client.request(
-      { method: "tools/call", params: { name: "echo_paid", arguments: args } },
+      {
+        method: "tools/call",
+        params: { name: "echo_paid", arguments: args, _meta: meta }
+      },
       CallToolResultSchema
     );
 
@@ -148,6 +156,150 @@ describe("x402 payment gate", () => {
       arguments: { message: "hi" }
     });
     expect(res.isError).toBe(true);
+    expect(facilitator.settleCalls).toHaveLength(0);
+  });
+
+  it("returns an error and no receipt when settlement fails after tool success", async () => {
+    const { facilitator, payingClient, settled } = await setup({
+      failSettle: true
+    });
+    const res = await payingClient.callTool(async () => true, {
+      name: "echo_paid",
+      arguments: { message: "hi" }
+    });
+    expect(res.isError).toBe(true);
+    const err = res._meta?.["x402/error"] as Record<string, unknown> | undefined;
+    if (err) expect(err.error).toBe("MOCK_SETTLE_FAILED");
+    expect(res._meta?.["x402/payment-response"]).toBeUndefined();
+    expect(settled).toHaveLength(0); // no receipt row for an unsettled call
+  });
+
+  it("re-challenges a replayed payment instead of settling twice", async () => {
+    const { facilitator, payingClient, rawCall, settled } = await setup();
+    const ok = await payingClient.callTool(async () => true, {
+      name: "echo_paid",
+      arguments: { message: "hello" }
+    });
+    expect(ok.isError ?? false).toBe(false);
+    expect(facilitator.settleCalls).toHaveLength(1);
+
+    // Replay the exact payment payload the client just settled with
+    const paid = facilitator.settleCalls[0].payload;
+    const replayToken = btoa(JSON.stringify(paid));
+    const res = await rawCall(
+      { message: "hello" },
+      { "x402/payment": replayToken }
+    );
+    expect(res.isError).toBe(true);
+    const err = res._meta?.["x402/error"] as Record<string, unknown>;
+    expect(err.error).toBe("NONCE_ALREADY_USED");
+    expect(facilitator.settleCalls).toHaveLength(1); // never settled twice
+    expect(settled).toHaveLength(1);
+  });
+
+  it("rejects a payment whose accepted requirements were tampered (amount)", async () => {
+    const { facilitator, payingClient, rawCall } = await setup();
+    await payingClient.callTool(async () => true, {
+      name: "echo_paid",
+      arguments: { message: "hello" }
+    });
+    const verifiesBefore = facilitator.verifyCalls.length;
+
+    const paid = structuredClone(
+      facilitator.settleCalls[0].payload
+    ) as Record<string, any>;
+    paid.accepted.amount = "1"; // pay 0.000001 USDC instead of $0.50
+    const res = await rawCall(
+      { message: "hello" },
+      { "x402/payment": btoa(JSON.stringify(paid)) }
+    );
+    expect(res.isError).toBe(true);
+    const err = res._meta?.["x402/error"] as Record<string, unknown>;
+    expect(err.error).toBe("INVALID_PAYMENT");
+    // rejected before the facilitator was even consulted
+    expect(facilitator.verifyCalls.length).toBe(verifiesBefore);
+    expect(facilitator.settleCalls).toHaveLength(1);
+  });
+
+  it("rejects a payment for the wrong network", async () => {
+    const { facilitator, payingClient, rawCall } = await setup();
+    await payingClient.callTool(async () => true, {
+      name: "echo_paid",
+      arguments: { message: "hello" }
+    });
+    const paid = structuredClone(
+      facilitator.settleCalls[0].payload
+    ) as Record<string, any>;
+    paid.accepted.network = "eip155:8453"; // mainnet payment vs testnet server
+    const res = await rawCall(
+      { message: "hello" },
+      { "x402/payment": btoa(JSON.stringify(paid)) }
+    );
+    expect(res.isError).toBe(true);
+    const err = res._meta?.["x402/error"] as Record<string, unknown>;
+    expect(err.error).toBe("INVALID_PAYMENT");
+    expect(facilitator.settleCalls).toHaveLength(1);
+  });
+
+  it("re-challenges on an expired echoed quote without touching the facilitator", async () => {
+    const { facilitator, payingClient, rawCall } = await setup();
+    await payingClient.callTool(async () => true, {
+      name: "echo_paid",
+      arguments: { message: "hello" }
+    });
+    const verifiesBefore = facilitator.verifyCalls.length;
+
+    const args = { message: "hello" };
+    const expiredQuote = await signQuote("test-key", {
+      priceUSD: 0.5,
+      requestHash: await hashRequest({ name: "echo_paid", args }),
+      expiresAt: Date.now() - 1
+    });
+    const paid = facilitator.settleCalls[0].payload;
+    const res = await rawCall(args, {
+      "x402/payment": btoa(JSON.stringify(paid)),
+      "veristat/quote": expiredQuote
+    });
+    expect(res.isError).toBe(true);
+    const err = res._meta?.["x402/error"] as Record<string, unknown>;
+    expect(err.error).toBe("QUOTE_EXPIRED");
+    expect(facilitator.verifyCalls.length).toBe(verifiesBefore);
+    expect(facilitator.settleCalls).toHaveLength(1);
+  });
+
+  it("re-challenges on a tampered echoed quote (price mismatch)", async () => {
+    const { facilitator, payingClient, rawCall } = await setup();
+    await payingClient.callTool(async () => true, {
+      name: "echo_paid",
+      arguments: { message: "hello" }
+    });
+    const args = { message: "hello" };
+    const cheapQuote = await signQuote("test-key", {
+      priceUSD: 0.25, // not a price computePriceUSD can produce
+      requestHash: await hashRequest({ name: "echo_paid", args }),
+      expiresAt: Date.now() + 60_000
+    });
+    const paid = facilitator.settleCalls[0].payload;
+    const res = await rawCall(args, {
+      "x402/payment": btoa(JSON.stringify(paid)),
+      "veristat/quote": cheapQuote
+    });
+    expect(res.isError).toBe(true);
+    const err = res._meta?.["x402/error"] as Record<string, unknown>;
+    expect(err.error).toBe("QUOTE_PRICE_MISMATCH");
+    expect(facilitator.settleCalls).toHaveLength(1);
+  });
+
+  it("rejects garbage payment tokens", async () => {
+    const { facilitator, rawCall } = await setup();
+    const res = await rawCall(
+      { message: "hi" },
+      { "x402/payment": "not-base64-json" }
+    );
+    expect(res.isError).toBe(true);
+    const err = res._meta?.["x402/error"] as Record<string, unknown>;
+    expect(err.error).toBe("INVALID_PAYMENT");
+    expect(facilitator.verifyCalls).toHaveLength(0);
     expect(facilitator.settleCalls).toHaveLength(0);
   });
 });
