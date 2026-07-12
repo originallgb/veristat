@@ -21,11 +21,17 @@
   "vars": {
     // base-sepolia for dev/testnet; set to "eip155:8453" (Base mainnet) for launch
     "NETWORK": "eip155:84532",
-    // Facilitator abstraction (spec §3): x402.org for testnet dev.
-    // Mainnet launch: Coinbase CDP facilitator URL. Later: Cloudflare Gateway.
+    // Facilitator abstraction (spec §3): x402.org for plain testnet payments.
+    // Bazaar listing rehearsal + mainnet: https://api.cdp.coinbase.com/platform/v2/x402
+    // (requires CDP_API_KEY_ID / CDP_API_KEY_SECRET secrets — docs/ROADMAP.md Phase 2).
+    // Later: Cloudflare Monetization Gateway.
     "FACILITATOR_URL": "https://x402.org/facilitator",
     // PLACEHOLDER: your USDC receiving address on Base — supply your own wallet
     "PAY_TO_ADDRESS": "0x0000000000000000000000000000000000000000",
+    // Public /mcp URL — advertised as the 402 resource and catalogued by the
+    // Bazaar on first CDP settlement (docs/research/bazaar-listing.md).
+    // Set to the deployed workers.dev URL; empty disables discovery advertisement.
+    "PUBLIC_URL": "",
     "PANEL_MODEL_ANTHROPIC": "claude-sonnet-5",
     "PANEL_MODEL_OPENAI": "gpt-5-mini",
     "PANEL_MODEL_GOOGLE": "gemini-2.5-flash",
@@ -33,6 +39,6 @@
   }
   // Secrets (set via `npx wrangler secret put NAME`, or .dev.vars locally):
   //   ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY, QUOTE_SIGNING_KEY
-  //   (optionally CDP_API_KEY_ID / CDP_API_KEY_SECRET if the mainnet
-  //    facilitator requires auth — wired through FACILITATOR_URL headers)
+  //   CDP_API_KEY_ID / CDP_API_KEY_SECRET — required once FACILITATOR_URL
+  //   points at api.cdp.coinbase.com (src/payments/cdp.ts fails fast if missing)
 }

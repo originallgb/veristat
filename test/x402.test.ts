@@ -9,6 +9,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
 import { PaymentGate, type SettlementInfo } from "../src/payments/x402";
 import { hashRequest, signQuote } from "../src/payments/quoting";
+import { consensusCheckDiscovery } from "../src/payments/discovery";
 import { MockFacilitator } from "./mock_facilitator";
 
 const NETWORK = "eip155:84532";
@@ -17,7 +18,12 @@ const TEST_PK =
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 const RECIPIENT = "0x1111111111111111111111111111111111111111" as const;
 
-async function setup(opts?: { failSettle?: boolean; toolFails?: boolean }) {
+async function setup(opts?: {
+  failSettle?: boolean;
+  toolFails?: boolean;
+  discovery?: Record<string, unknown>;
+  publicUrl?: string;
+}) {
   const facilitator = new MockFacilitator(NETWORK);
   facilitator.failSettle = opts?.failSettle ?? false;
 
@@ -26,6 +32,7 @@ async function setup(opts?: { failSettle?: boolean; toolFails?: boolean }) {
     recipient: RECIPIENT,
     quoteSigningKey: "test-key",
     facilitator,
+    publicUrl: opts?.publicUrl,
     onSettled: async (s) => {
       settled.push(s);
     }
@@ -63,7 +70,8 @@ async function setup(opts?: { failSettle?: boolean; toolFails?: boolean }) {
           }
         ]
       };
-    }
+    },
+    opts?.discovery
   );
 
   const client = new Client({ name: "test-client", version: "0.0.0" });
@@ -288,6 +296,37 @@ describe("x402 payment gate", () => {
     const err = res._meta?.["x402/error"] as Record<string, unknown>;
     expect(err.error).toBe("QUOTE_PRICE_MISMATCH");
     expect(facilitator.settleCalls).toHaveLength(1);
+  });
+
+  it("advertises discovery + public URL in the 402 and echoes them to the facilitator on settle", async () => {
+    // This is the exact mechanism that gets us catalogued in the Bazaar:
+    // discovery declaration advertised in the 402, echoed by the client,
+    // delivered to the facilitator inside the settled payment payload.
+    const discovery = consensusCheckDiscovery("test description");
+    const publicUrl = "https://veristat.example.workers.dev/mcp";
+    const { facilitator, payingClient, rawCall, settled } = await setup({
+      discovery,
+      publicUrl
+    });
+
+    const unpaid = await rawCall({ message: "hi" });
+    const err = unpaid._meta?.["x402/error"] as Record<string, any>;
+    expect(err.resource.url).toBe(publicUrl);
+    expect(err.extensions.bazaar).toBeDefined();
+    expect(err.extensions.bazaar.info.input.toolName).toBe("consensus_check");
+
+    const res = await payingClient.callTool(async () => true, {
+      name: "echo_paid",
+      arguments: { message: "hello" }
+    });
+    expect(res.isError ?? false).toBe(false);
+    expect(settled).toHaveLength(1);
+
+    const settledPayload = facilitator.settleCalls[0].payload as Record<string, any>;
+    expect(settledPayload.resource?.url).toBe(publicUrl);
+    expect(settledPayload.extensions?.bazaar?.info?.input?.toolName).toBe(
+      "consensus_check"
+    );
   });
 
   it("rejects garbage payment tokens", async () => {

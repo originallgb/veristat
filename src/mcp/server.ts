@@ -2,6 +2,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { McpAgent } from "agents/mcp";
 import { z } from "zod";
 import { PaymentGate } from "../payments/x402";
+import { buildFacilitator } from "../payments/cdp";
+import { consensusCheckDiscovery } from "../payments/discovery";
 import {
   consensusCheckInput,
   researchFanoutInput,
@@ -29,7 +31,8 @@ export class VeristatMCP extends McpAgent<Env> {
     const gate = new PaymentGate({
       network: env.NETWORK,
       recipient: env.PAY_TO_ADDRESS as `0x${string}`,
-      facilitatorUrl: env.FACILITATOR_URL,
+      facilitator: buildFacilitator(env),
+      publicUrl: env.PUBLIC_URL || undefined,
       quoteSigningKey: env.QUOTE_SIGNING_KEY,
       onSettled: (s) =>
         logSettlement(env.DB, {
@@ -132,7 +135,8 @@ export class VeristatMCP extends McpAgent<Env> {
         return {
           content: [{ type: "text" as const, text: JSON.stringify(response, null, 2) }]
         };
-      }
+      },
+      consensusCheckDiscovery(CONSENSUS_DESCRIPTION)
     );
 
     // --- Tool 2: get_sample_verdict (FREE, live) ---

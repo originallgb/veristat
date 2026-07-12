@@ -48,30 +48,36 @@ session read (`docs/research/bazaar-listing.md`).
 
 ## Phase 1 — Test hardening (see docs/TESTING.md for the full matrix)
 
-- [ ] Negative-path x402 tests vs mock facilitator: expired quote, tampered
+- [x] Negative-path x402 tests vs mock facilitator: expired quote, tampered
       amount, wrong network, replay, facilitator 500 on settle, degraded panel
-- [ ] `test/discovery.test.ts`: discovery declaration validates against its own
+- [x] `test/discovery.test.ts`: discovery declaration validates against its own
       JSON Schema (guards the silent-rejection failure mode)
-- [ ] `scripts/make-test-wallet.mjs` — generate buyer test wallets (gitignored)
-- [ ] `scripts/e2e.mjs` — full paid-call matrix against any VERISTAT_URL
-- [ ] `scripts/check-bazaar.mjs` — poll facilitator discovery catalog for us
-- [ ] `scripts/dashboard.mjs` — D1 settlements/requests with organic split
-- [ ] GitHub Actions CI: typecheck + vitest on every push/PR
+- [x] `scripts/make-test-wallet.mjs` — generate buyer test wallets (gitignored)
+- [x] `scripts/e2e.mjs` — full paid-call matrix against any VERISTAT_URL
+- [x] `scripts/check-bazaar.mjs` — poll facilitator discovery catalog for us
+      (validated against the live CDP catalog, both directions)
+- [x] `scripts/dashboard.mjs` — D1 settlements/requests with organic split
+- [x] GitHub Actions CI: typecheck + vitest on every push/PR
 - [ ] **USER**: fund generated testnet wallets at https://faucet.circle.com
       (20 USDC / address / 2h on Base Sepolia; no ETH needed)
 - [ ] Testnet e2e green from a funded non-deployer wallet (ship-gate rehearsal)
 
 ## Phase 2 — Bazaar discovery extension + CDP facilitator
 
-- [ ] Add discovery declaration to 402 payment requirements (`discoverable:
-      true`, input JSON Schema for `consensus_check`) in `src/payments/x402.ts`
-- [ ] Ensure `paymentPayload.resource` set for facilitator cataloging
-- [ ] CDP facilitator auth (`CDP_API_KEY_ID`/`CDP_API_KEY_SECRET` secrets →
-      auth headers) behind the existing `FacilitatorClient` seam
-- [ ] Log `EXTENSION-RESPONSES` from verify/settle; alert on `"rejected"`
+- [x] Discovery declaration in the 402 (`@x402/extensions` bazaar, input JSON
+      Schema derived from the zod source of truth — `src/payments/discovery.ts`),
+      echo-validated against tampering; settle-time echo covered by tests
+- [x] `paymentPayload.resource` = `PUBLIC_URL` var (client echoes the 402's
+      `resource` — set it to the real workers.dev /mcp URL before rehearsal)
+- [x] CDP facilitator auth (`CDP_API_KEY_ID`/`CDP_API_KEY_SECRET` secrets →
+      JWT bearer via `@coinbase/cdp-sdk/auth`) — `src/payments/cdp.ts`, selected
+      automatically when `FACILITATOR_URL` is api.cdp.coinbase.com
+- [x] `EXTENSION-RESPONSES` from verify/settle is decoded and logged by
+      @x402/core ("[x402] extension responses: ..." — grep Worker logs for
+      `"status":"rejected"`); `check-bazaar.mjs` is the authoritative check
 - [ ] **USER**: create CDP account + API key pair (portal.cdp.coinbase.com)
-- [ ] Testnet rehearsal: `FACILITATOR_URL` → CDP (base-sepolia), paid e2e,
-      confirm resource appears via `scripts/check-bazaar.mjs`
+- [ ] Testnet rehearsal: `FACILITATOR_URL` → CDP (base-sepolia), set
+      `PUBLIC_URL`, paid e2e, confirm listing via `scripts/check-bazaar.mjs`
 
 ## Phase 3 — Mainnet cutover (ordered; do not skip ahead)
 
