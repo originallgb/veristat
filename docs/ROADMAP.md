@@ -58,9 +58,10 @@ session read (`docs/research/bazaar-listing.md`).
       (validated against the live CDP catalog, both directions)
 - [x] `scripts/dashboard.mjs` — D1 settlements/requests with organic split
 - [x] GitHub Actions CI: typecheck + vitest on every push/PR
-- [ ] **USER**: fund generated testnet wallets at https://faucet.circle.com
+- [x] **USER**: fund generated testnet wallets at https://faucet.circle.com
       (20 USDC / address / 2h on Base Sepolia; no ETH needed)
-- [ ] Testnet e2e green from a funded non-deployer wallet (ship-gate rehearsal)
+- [x] Testnet e2e green from a funded non-deployer wallet (ship-gate rehearsal)
+      (2026-07-12: E2E OK, tx 0x342e61d0…, $0.50 settled to testnet payto wallet)
 
 ## Phase 2 — Bazaar discovery extension + CDP facilitator
 

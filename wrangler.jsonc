@@ -7,6 +7,7 @@
   // Spec §8: upgrade to Workers Paid before first mainnet call; these limits
   // require the paid plan. subrequests capped as a runaway guard.
   "limits": { "cpu_ms": 30000 },
+  "observability": { "enabled": true },
   "durable_objects": {
     "bindings": [{ "class_name": "VeristatMCP", "name": "VeristatMCP" }]
   },
