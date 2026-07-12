@@ -58,9 +58,10 @@ session read (`docs/research/bazaar-listing.md`).
       (validated against the live CDP catalog, both directions)
 - [x] `scripts/dashboard.mjs` — D1 settlements/requests with organic split
 - [x] GitHub Actions CI: typecheck + vitest on every push/PR
-- [ ] **USER**: fund generated testnet wallets at https://faucet.circle.com
+- [x] **USER**: fund generated testnet wallets at https://faucet.circle.com
       (20 USDC / address / 2h on Base Sepolia; no ETH needed)
-- [ ] Testnet e2e green from a funded non-deployer wallet (ship-gate rehearsal)
+- [x] Testnet e2e green from a funded non-deployer wallet (ship-gate rehearsal)
+      (2026-07-12: E2E OK, tx 0x342e61d0…, $0.50 settled to testnet payto wallet)
 
 ## Phase 2 — Bazaar discovery extension + CDP facilitator
 
@@ -125,6 +126,17 @@ session read (`docs/research/bazaar-listing.md`).
 - [ ] Day 30: gate met (≥10 organic wallets) → invest (research_fanout pipeline,
       refunds, 5-panel live). Gate failed → **stop; write the postmortem**
       (`docs/STRATEGY.md`, kill condition).
+
+## Post-launch backlog
+
+- [ ] Workers AI for eval graders / cheap tier / AI Gateway — feasibility in
+      `docs/research/workers-ai-models.md`; do not touch the paid panel.
+- [ ] Coding-tool plugin distribution: Cloudflare's [pay-from-coding-tools](
+      https://developers.cloudflare.com/agents/tools/payments/x402/pay-with-tool-plugins/)
+      lets Claude Code / OpenCode call x402 endpoints directly from tool
+      plugins — a zero-integration channel for coding agents to call
+      `consensus_check` mid-session. Evaluate after the Bazaar/registry
+      channels in Phase 5 are running (`docs/STRATEGY.md` Distribution).
 
 ## Standing constraints
 

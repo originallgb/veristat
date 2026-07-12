@@ -12,7 +12,8 @@ is the credential — buyers need no vendor accounts.
 
 `docs/SPEC.md` (decided build spec) · `docs/STRATEGY.md` (why + kill condition)
 · `docs/ROADMAP.md` (launch phases + status) · `docs/TESTING.md` (test pyramid,
-wallet runbook) · `docs/RUNBOOK.md` (ops).
+wallet runbook) · `docs/RUNBOOK.md` (ops, incl. CI/CD)
+· `docs/ARCHITECTURE.md` (Cloudflare architecture + payment-flow diagrams).
 
 ## Tools
 

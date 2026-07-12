@@ -103,8 +103,14 @@ try {
 check("under-cap client never completes an overpriced call", cappedRejected);
 
 // 6. paid call end to end (real settlement)
-// (withX402Client mutates the underlying client; re-wrapping with a higher cap)
-const paying = withX402Client(client, {
+// withX402Client mutates the client in place, so re-wrapping `client` would
+// stack callTool wrappers and shift the argument list — a fresh connection is
+// required for the higher-cap buyer.
+const client2 = new Client({ name: "e2e-paying", version: "0.0.0" });
+await client2.connect(
+  new StreamableHTTPClientTransport(new URL(BASE), { fetch: mcpFetch })
+);
+const paying = withX402Client(client2, {
   network: NETWORK,
   account: toClientEvmSigner(privateKeyToAccount(PK)),
   maxPaymentValue: BigInt(3_000_000) // $3 cap
@@ -134,5 +140,6 @@ if (receipt?.transaction) {
 }
 
 await client.close();
+await client2.close();
 console.log(`\n${failures === 0 ? "E2E OK" : `E2E FAILED: ${failures} check(s)`}`);
 process.exit(failures === 0 ? 0 : 1);

@@ -74,6 +74,23 @@ launch-partner pitch), awesome-x402, Smithery/Glama/PulseMCP, plus the free
 `get_sample_verdict` tool so agents can taste output without a wallet.
 First-ten-customers list: `docs/ROADMAP.md` Phase 5.
 
+Emerging channel worth tracking, not building for yet: Cloudflare's
+["Pay from coding tools"](https://developers.cloudflare.com/agents/tools/payments/x402/pay-with-tool-plugins/)
+lets Claude Code / OpenCode pay x402 endpoints directly from tool-call
+plugins — a coding agent could invoke `consensus_check` mid-session with no
+separate wallet integration. Noted in `docs/ROADMAP.md` post-launch backlog;
+no code changes until distribution channels above are saturated.
+
+## Competitive landscape — adjacent payment standards
+
+x402 (Coinbase/Cloudflare-backed, HTTP 402 + EIP-3009) is not the only
+machine-payment standard emerging. [MPP — Machine Payments
+Protocol](https://mpp.dev/) (Tempo + Stripe) also standardizes HTTP 402 for
+agent-to-agent payment, positioned similarly (charge per API call/tool call).
+veristat is x402-only by design (`docs/SPEC.md` — platform/pricing decided,
+don't re-litigate); flagging MPP here so a future protocol-support decision
+starts from "this exists and is Stripe-backed," not from scratch.
+
 ## The kill condition (verbatim, do not soften)
 
 **Try-then-inline** is the thing most likely to kill this: a builder pays for
