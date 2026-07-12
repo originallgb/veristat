@@ -8,6 +8,12 @@ vendor), synthesizes a structured verdict (consensus, agreements, contradictions
 dissent), and returns it. Payment per call via x402 (USDC on Base). The payment
 is the credential — buyers need no vendor accounts.
 
+## Docs
+
+`docs/SPEC.md` (decided build spec) · `docs/STRATEGY.md` (why + kill condition)
+· `docs/ROADMAP.md` (launch phases + status) · `docs/TESTING.md` (test pyramid,
+wallet runbook) · `docs/RUNBOOK.md` (ops).
+
 ## Tools
 
 | Tool | Price | Status |

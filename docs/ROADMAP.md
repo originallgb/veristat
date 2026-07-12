@@ -1,0 +1,126 @@
+# ROADMAP — testnet MVP → live on the x402 Bazaar
+
+Status legend: `[x]` done · `[ ]` open · **USER** = needs an operator-supplied
+account/wallet/decision; everything else is agent-executable.
+
+The one-line goal: **listed and selling in the Coinbase x402 Bazaar and the
+official MCP registry, with instrumentation that can answer the ship gate
+(10 organic paying wallets in 30 days — `docs/STRATEGY.md`).**
+
+## How Bazaar listing actually works (read before Phase 2/3)
+
+There is **no registration form**. The CDP facilitator auto-catalogs an
+endpoint the first time it **settles** a payment that carries the Bazaar
+discovery extension. Requirements (verified against CDP docs, July 2026):
+
+1. Verify/settle must go through the CDP facilitator
+   (`https://api.cdp.coinbase.com/platform/v2/x402`, CDP API keys required).
+2. The 402 payment requirements must carry the discovery declaration
+   (`discoverable: true` + JSON Schema for the input) — served by
+   `bazaarResourceServerExtension` / `declareDiscoveryExtension` from
+   `@x402/extensions`.
+3. `paymentPayload.resource` must be populated so CDP knows what to catalog.
+4. The declaration undergoes **strict JSON Schema validation**; a `"rejected"`
+   status in the `EXTENSION-RESPONSES` verify/settle response header means the
+   service silently never lists (known flakiness: x402-foundation/x402#2112 —
+   the header is sometimes absent; poll the discovery endpoint to confirm).
+5. Recency filter: resources with no settled activity in 30 days drop out of
+   results — listing is not permanent; organic or canary traffic keeps it live.
+
+Testnet rehearsal is supported (Base Sepolia through the CDP facilitator with
+the same keys), and the independent x402.org facilitator maintains a separate
+test catalog at `https://x402.org/facilitator/discovery/resources`.
+
+---
+
+## Phase 0 — Agentic engineering init + docs
+
+- [x] Restore CLAUDE.md (was deleted by accident in `e5eeaf5`), extend with
+      deploy state + client-script SSE gotcha + docs pointers
+- [x] `.claude/settings.json` permissions allowlist + SessionStart hook
+      (npm install + local D1 migrations) + `verify-paid-call` skill
+- [x] `docs/`: SPEC, STRATEGY, ROADMAP, TESTING, RUNBOOK, research notes
+- [ ] **USER** (optional): approve one Readwise MCP call in a Claude session so
+      saved x402/MCP docs can be distilled into `docs/research/`
+
+## Phase 1 — Test hardening (see docs/TESTING.md for the full matrix)
+
+- [ ] Negative-path x402 tests vs mock facilitator: expired quote, tampered
+      amount, wrong network, replay, facilitator 500 on settle, degraded panel
+- [ ] `test/discovery.test.ts`: discovery declaration validates against its own
+      JSON Schema (guards the silent-rejection failure mode)
+- [ ] `scripts/make-test-wallet.mjs` — generate buyer test wallets (gitignored)
+- [ ] `scripts/e2e.mjs` — full paid-call matrix against any VERISTAT_URL
+- [ ] `scripts/check-bazaar.mjs` — poll facilitator discovery catalog for us
+- [ ] `scripts/dashboard.mjs` — D1 settlements/requests with organic split
+- [ ] GitHub Actions CI: typecheck + vitest on every push/PR
+- [ ] **USER**: fund generated testnet wallets at https://faucet.circle.com
+      (20 USDC / address / 2h on Base Sepolia; no ETH needed)
+- [ ] Testnet e2e green from a funded non-deployer wallet (ship-gate rehearsal)
+
+## Phase 2 — Bazaar discovery extension + CDP facilitator
+
+- [ ] Add discovery declaration to 402 payment requirements (`discoverable:
+      true`, input JSON Schema for `consensus_check`) in `src/payments/x402.ts`
+- [ ] Ensure `paymentPayload.resource` set for facilitator cataloging
+- [ ] CDP facilitator auth (`CDP_API_KEY_ID`/`CDP_API_KEY_SECRET` secrets →
+      auth headers) behind the existing `FacilitatorClient` seam
+- [ ] Log `EXTENSION-RESPONSES` from verify/settle; alert on `"rejected"`
+- [ ] **USER**: create CDP account + API key pair (portal.cdp.coinbase.com)
+- [ ] Testnet rehearsal: `FACILITATOR_URL` → CDP (base-sepolia), paid e2e,
+      confirm resource appears via `scripts/check-bazaar.mjs`
+
+## Phase 3 — Mainnet cutover (ordered; do not skip ahead)
+
+1. [ ] **USER**: upgrade Workers plan to Paid ($5/mo) — *before* any mainnet
+       call (free-plan 10ms CPU cap can kill a request *after* settlement =
+       charging a wallet and returning nothing)
+2. [ ] **USER**: real `PAY_TO_ADDRESS` (Base mainnet USDC receiving address —
+       Coinbase account address or hardware wallet; replaces `0x0000…`)
+3. [ ] Config flip: `NETWORK=eip155:8453`, `FACILITATOR_URL` → CDP mainnet,
+       secrets via `wrangler secret put`, deploy
+4. [ ] **USER**: canary buyer wallet, ~$5 USDC on Base mainnet, *not* the
+       deployer's wallet
+5. [ ] Canary paid call → verifies e2e AND triggers Bazaar cataloging; confirm
+       via `scripts/check-bazaar.mjs` + x402scan + BaseScan tx
+6. [ ] Insert canary/test wallet addresses into D1 `known_wallets` (organic
+       split instrumentation)
+
+## Phase 4 — Official MCP registry
+
+- [ ] Finalize `server.json`: `io.github.originallgb/veristat`, real
+      workers.dev URL
+- [ ] **USER**: `mcp-publisher login github` (device-code flow)
+- [ ] `mcp-publisher publish` (validate with `--dry-run` first)
+- [ ] GitHub Action for re-publish on version bump (GitHub OIDC, no secrets)
+
+## Phase 5 — Distribution + the 30-day experiment
+
+- [ ] x402scan listing confirmed (automatic once settling on Base mainnet)
+- [ ] awesome-x402 PR; Smithery / Glama / PulseMCP submissions
+- [ ] **USER**: join Cloudflare Monetization Gateway waitlist (announcement
+      post); pitch CF-native launch-partner/case-study angle. Do not block on it.
+- [ ] Outreach — the first-ten list from the spec:
+  - [ ] ottoai + peer crypto-signal operators on the Bazaar (pre-trade check)
+  - [ ] Virtuals ecosystem agent builders
+  - [ ] ElizaOS / Daydreams — PR adding veristat as a verification plugin
+  - [ ] Cloudflare Agents SDK example PR (their docs need non-crypto x402 demos)
+  - [ ] LangGraph template contribution
+  - [ ] CrewAI tool directory
+  - [ ] Claude Code skill/plugin calling consensus_check before risky commits
+  - [ ] x402 community Discord
+  - [ ] Two consulting-client harnesses (dogfood, flagged non-organic)
+  - [ ] Deep-research power users on X (research_fanout tier pitch)
+- [ ] `scripts/dashboard.mjs` weekly review: distinct organic payers vs day-30
+      gate
+- [ ] Day 30: gate met (≥10 organic wallets) → invest (research_fanout pipeline,
+      refunds, 5-panel live). Gate failed → **stop; write the postmortem**
+      (`docs/STRATEGY.md`, kill condition).
+
+## Standing constraints
+
+- Settlement only after tool success — a failed panel never charges. Any
+  settlement row without a matching verdict is a release blocker.
+- Pricing/tool surface/platform are settled (`docs/SPEC.md`) — don't re-litigate.
+- Prompts are versioned files; never edit in place.
+- Keep Bazaar listing alive: at least one settled call every 30 days.
