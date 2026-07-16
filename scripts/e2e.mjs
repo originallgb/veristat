@@ -62,6 +62,14 @@ const req0 = err?.accepts?.[0];
 check("402 quotes $0.50 (3-panel, small input)", req0?.amount === "500000", String(req0?.amount));
 check("402 network matches", req0?.network === NETWORK, String(req0?.network));
 check("402 scheme is exact", req0?.scheme === "exact", String(req0?.scheme));
+check("402 resource is the exact target endpoint", err?.resource?.url === BASE,
+  String(err?.resource?.url));
+const bazaar = err?.extensions?.bazaar;
+check("402 carries MCP Bazaar discovery metadata",
+  bazaar?.info?.input?.type === "mcp" &&
+  bazaar?.info?.input?.toolName === "consensus_check" &&
+  bazaar?.info?.input?.transport === "streamable-http" &&
+  bazaar?.info?.output?.type === "json");
 check("402 carries signed quote extension",
   typeof err?.extensions?.["veristat/quote"]?.token === "string" &&
   err?.extensions?.["veristat/quote"]?.priceUSD === 0.5);

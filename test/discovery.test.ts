@@ -43,6 +43,18 @@ describe("bazaar discovery declaration", () => {
       >
     ).bazaar;
     expect(bazaar?.info?.input?.toolName).toBe("consensus_check");
+    expect((bazaar?.info?.input as Record<string, unknown>)?.type).toBe("mcp");
+    expect((bazaar?.info?.input as Record<string, unknown>)?.transport).toBe(
+      "streamable-http"
+    );
+    expect(
+      (bazaar?.info as { output?: { type?: string; example?: unknown } })?.output
+        ?.type
+    ).toBe("json");
+    expect(
+      (bazaar?.info as { output?: { type?: string; example?: unknown } })?.output
+        ?.example
+    ).toBeDefined();
     const example = bazaar?.info?.input?.example as
       | Record<string, unknown>
       | undefined;

@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { VeristatMCP } from "./mcp/server";
 import { computePriceUSD } from "./payments/quoting";
 import { METHODOLOGY, priceCard } from "./mcp/sample_verdict";
+import { healthPayload } from "./health";
 
 export { VeristatMCP };
 
@@ -19,7 +20,7 @@ app.get("/", (c) =>
   })
 );
 
-app.get("/health", (c) => c.json({ ok: true }));
+app.get("/health", (c) => c.json(healthPayload(c.env)));
 
 // Human/agent-readable quote preview (the authoritative quote is in the 402)
 app.get("/price", (c) => {

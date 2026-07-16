@@ -313,7 +313,10 @@ describe("x402 payment gate", () => {
     const err = unpaid._meta?.["x402/error"] as Record<string, any>;
     expect(err.resource.url).toBe(publicUrl);
     expect(err.extensions.bazaar).toBeDefined();
+    expect(err.extensions.bazaar.info.input.type).toBe("mcp");
     expect(err.extensions.bazaar.info.input.toolName).toBe("consensus_check");
+    expect(err.extensions.bazaar.info.input.transport).toBe("streamable-http");
+    expect(err.extensions.bazaar.info.output.type).toBe("json");
 
     const res = await payingClient.callTool(async () => true, {
       name: "echo_paid",
@@ -327,6 +330,8 @@ describe("x402 payment gate", () => {
     expect(settledPayload.extensions?.bazaar?.info?.input?.toolName).toBe(
       "consensus_check"
     );
+    expect(settledPayload.extensions?.bazaar?.info?.input?.type).toBe("mcp");
+    expect(settledPayload.extensions?.bazaar?.info?.output?.type).toBe("json");
   });
 
   it("rejects garbage payment tokens", async () => {

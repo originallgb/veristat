@@ -1,6 +1,8 @@
 interface Env {
   VeristatMCP: DurableObjectNamespace;
   DB: D1Database;
+  /** Cloudflare deployment identity; absent only in narrow unit-test mocks. */
+  CF_VERSION_METADATA?: WorkerVersionMetadata;
 
   NETWORK: string;
   FACILITATOR_URL: string;
