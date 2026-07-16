@@ -171,10 +171,10 @@ permit any Phase 3 step. The prioritized implementation slices and explicit
 deferrals are in
 [`docs/plans/prelaunch-unblocked-backlog.md`](plans/prelaunch-unblocked-backlog.md).
 
-- [ ] Registry/public-contract readiness: align registry schema, versions,
+- [x] Registry/public-contract readiness: align registry schema, versions,
       three-panel pricing/copy, offline validation, and operator-controlled
       GitHub OIDC publication automation
-- [ ] Quality-evaluation baseline: deterministic labelled fixtures, synthesis
+- [x] Quality-evaluation baseline: deterministic labelled fixtures, synthesis
       versus naive-majority metrics, and an opt-in no-x402 live runner
 - [ ] Expand the stable baseline to 20–30 deep, labelled verification cases
       across factual, code/review, migration, ambiguous, and adversarial work
@@ -208,7 +208,7 @@ this prelaunch track.
 - [ ] **USER**: `mcp-publisher login github` (device-code flow)
 - [ ] `mcp-publisher publish` (run `mcp-publisher validate server.json` first;
       `publish --dry-run` is obsolete)
-- [ ] GitHub Action for re-publish on version bump (GitHub OIDC, no secrets)
+- [x] GitHub Action for re-publish on version bump (GitHub OIDC, no secrets)
 
 ## Phase 5 — Distribution + the 30-day experiment
 
