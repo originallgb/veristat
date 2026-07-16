@@ -163,12 +163,51 @@ Workers Paid, receiver-wallet, payment-integrity, or evidence requirements.
 7. [ ] Insert canary/test wallet addresses into D1 `known_wallets` (organic
        split instrumentation)
 
+## Unblocked prelaunch work — parallel to the closed Phase 2/3 gate
+
+This work can proceed while Bazaar indexing remains externally blocked. It
+does not weaken the Phase 2 exit criteria, authorize another paid probe, or
+permit any Phase 3 step. The prioritized implementation slices and explicit
+deferrals are in
+[`docs/plans/prelaunch-unblocked-backlog.md`](plans/prelaunch-unblocked-backlog.md).
+
+- [ ] Registry/public-contract readiness: align registry schema, versions,
+      three-panel pricing/copy, offline validation, and operator-controlled
+      GitHub OIDC publication automation
+- [ ] Quality-evaluation baseline: deterministic labelled fixtures, synthesis
+      versus naive-majority metrics, and an opt-in no-x402 live runner
+- [ ] Expand the stable baseline to 20–30 deep, labelled verification cases
+      across factual, code/review, migration, ambiguous, and adversarial work
+- [x] Document the current D1 storage truth and the bounded-retention,
+      caller-control, and aggregate-only alternatives in
+      [`docs/plans/privacy-and-retention.md`](plans/privacy-and-retention.md)
+- [ ] **USER**: choose the retention default/window, caller control,
+      historical-row treatment, deletion promise, and production-data-use rule
+- [ ] Implement the selected policy, tested purge/deletion path, migration and
+      fail-safe rollback, and accurate pre-submission buyer disclosure
+- [x] Specify the safe Node buyer path (initialize/list, free sample, unpaid
+      402, optional Base Sepolia retry through the dedicated dispatcher) in
+      [`docs/plans/buyer-integration-pack.md`](plans/buyer-integration-pack.md)
+- [ ] Implement and fresh-environment-test the buyer integration pack; the
+      default path must be unable to spend
+- [ ] Draft registry/directory copy, first-user harnesses, outreach text, and a
+      launch checklist; do not submit, publish, post, or send without operator
+      approval
+- [ ] **USER**: approve the public claims, privacy disclosure, publication
+      action, submissions, and outreach batches
+
+Explicitly deferred: additional paid Bazaar probes, mainnet changes,
+five-panel execution, automatic refunds, `research_fanout`, and Workers AI.
+Their resume conditions are recorded in the linked backlog; none is part of
+this prelaunch track.
+
 ## Phase 4 — Official MCP registry
 
 - [x] Finalize `server.json`: `io.github.originallgb/veristat`, real
       workers.dev URL
 - [ ] **USER**: `mcp-publisher login github` (device-code flow)
-- [ ] `mcp-publisher publish` (validate with `--dry-run` first)
+- [ ] `mcp-publisher publish` (run `mcp-publisher validate server.json` first;
+      `publish --dry-run` is obsolete)
 - [ ] GitHub Action for re-publish on version bump (GitHub OIDC, no secrets)
 
 ## Phase 5 — Distribution + the 30-day experiment
