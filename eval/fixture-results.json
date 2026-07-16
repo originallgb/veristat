@@ -1,0 +1,177 @@
+{
+  "baseline": {
+    "synthesisAccuracy": 0.9166666666666666,
+    "naiveMajorityAccuracy": 0.3333333333333333,
+    "requiredFindingRecall": 1
+  },
+  "results": [
+    {
+      "caseId": "fact-water-boiling-point",
+      "verdict": {
+        "verdict": "supported",
+        "consensus_score": 0.98,
+        "agreements": [{ "point": "The stated 100 °C boiling point is correct under the given conditions.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "At standard atmospheric pressure, pure water's boiling point is 100 °C."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED"],
+      "degraded": false,
+      "latencyMs": 8200
+    },
+    {
+      "caseId": "fact-great-wall-moon",
+      "verdict": {
+        "verdict": "refuted",
+        "consensus_score": 0.95,
+        "agreements": [{ "point": "The wall is not visible unaided from lunar distance.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The Great Wall is not visible unaided from the Moon; its width is far below naked-eye resolution at that distance."
+      },
+      "panelOutputs": ["ASSESSMENT: REFUTED", "ASSESSMENT: REFUTED", "ASSESSMENT: REFUTED"],
+      "degraded": false,
+      "latencyMs": 9100
+    },
+    {
+      "caseId": "fact-tiny-survey-generalization",
+      "verdict": {
+        "verdict": "insufficient",
+        "consensus_score": 0.86,
+        "agreements": [{ "point": "The convenience sample is too small and unrepresentative for a city-wide inference.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The sample is too small and selection-biased to establish what most city residents prefer."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: INSUFFICIENT_INFO"],
+      "degraded": false,
+      "latencyMs": 8700
+    },
+    {
+      "caseId": "code-clamp-inclusive",
+      "verdict": {
+        "verdict": "supported",
+        "consensus_score": 0.96,
+        "agreements": [{ "point": "The nested min/max expression enforces inclusive bounds.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "Given the stated finite-number assumptions, the function correctly applies inclusive bounds."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED"],
+      "degraded": false,
+      "latencyMs": 7600
+    },
+    {
+      "caseId": "code-check-then-deduct",
+      "verdict": {
+        "verdict": "refuted",
+        "consensus_score": 0.91,
+        "agreements": [{ "point": "A race condition permits concurrent calls to spend the same observed balance.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The non-transactional check and write create a race condition, so concurrent purchases can overspend."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: REFUTED"],
+      "degraded": true,
+      "latencyMs": 13200
+    },
+    {
+      "caseId": "code-catch-all-empty",
+      "verdict": {
+        "verdict": "contested",
+        "consensus_score": 0.58,
+        "agreements": [{ "point": "Returning an empty list may simplify callers but masks operational failures.", "models_agreeing": 2 }],
+        "contradictions": [{ "point": "Whether fallback behavior is acceptable", "positions": [{ "stance": "acceptable for explicitly best-effort UI", "models": ["fixture-a"], "reasoning": "Availability may be preferred." }, { "stance": "unsafe without an error signal", "models": ["fixture-b", "fixture-c"], "reasoning": "The caller cannot distinguish outage from no data." }] }],
+        "dissent": [],
+        "synthesis": "The fallback can be intentional, but as written it masks operational failures and turns database outages into false empty results."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: CONTESTED"],
+      "degraded": false,
+      "latencyMs": 10400
+    },
+    {
+      "caseId": "migration-add-nullable-column",
+      "verdict": {
+        "verdict": "supported",
+        "consensus_score": 0.9,
+        "agreements": [{ "point": "The expand-and-backfill sequence is backward compatible under the supplied database constraints.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The nullable addition and tolerant readers make this a backward compatible migration, with small-batch backfill limiting operational risk."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED"],
+      "degraded": false,
+      "latencyMs": 9700
+    },
+    {
+      "caseId": "migration-rename-same-release",
+      "verdict": {
+        "verdict": "contested",
+        "consensus_score": 0.54,
+        "agreements": [{ "point": "Safety depends on deployment ordering during the rolling overlap.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The plan has a deployment ordering hazard: old instances can reference the removed name while new instances expect the replacement."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: CONTESTED"],
+      "degraded": false,
+      "latencyMs": 11100
+    },
+    {
+      "caseId": "migration-delete-before-restore-test",
+      "verdict": {
+        "verdict": "refuted",
+        "consensus_score": 0.97,
+        "agreements": [{ "point": "Deleting before restore validation risks irreversible data loss.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The sequence risks irreversible data loss because recoverability is tested only after the source table is gone."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: REFUTED"],
+      "degraded": false,
+      "latencyMs": 8400
+    },
+    {
+      "caseId": "evidence-three-conversions",
+      "verdict": {
+        "verdict": "insufficient",
+        "consensus_score": 0.92,
+        "agreements": [{ "point": "A confidence interval would be extremely wide with only three total conversions.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The result is too sparse for a conclusive comparison; a confidence interval would include large effects in either direction."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: INSUFFICIENT_INFO"],
+      "degraded": true,
+      "latencyMs": 14500
+    },
+    {
+      "caseId": "evidence-clean-logs-slow-p95",
+      "verdict": {
+        "verdict": "insufficient",
+        "consensus_score": 0.49,
+        "agreements": [{ "point": "The p95 change is a material latency regression despite the absence of logged errors.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The evidence shows a latency regression, but more service objectives and traffic context are needed for a broad health verdict."
+      },
+      "panelOutputs": ["ASSESSMENT: INSUFFICIENT_INFO", "ASSESSMENT: INSUFFICIENT_INFO", "ASSESSMENT: CONTESTED"],
+      "degraded": false,
+      "latencyMs": 12000
+    },
+    {
+      "caseId": "adversarial-email-domain-identity",
+      "verdict": {
+        "verdict": "insufficient",
+        "consensus_score": 0.89,
+        "agreements": [{ "point": "An address alone does not establish domain ownership, control, or organizational authority.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The address does not prove domain ownership or that the sender is authorized to represent the company."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: INSUFFICIENT_INFO"],
+      "degraded": false,
+      "latencyMs": 9300
+    }
+  ]
+}

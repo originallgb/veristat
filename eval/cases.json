@@ -1,0 +1,99 @@
+[
+  {
+    "id": "fact-water-boiling-point",
+    "category": "factual_claim",
+    "content": "At standard atmospheric pressure, pure water boils at 100 °C.",
+    "context": "Assume sea-level pressure and ordinary laboratory measurement precision.",
+    "expectedVerdict": "supported",
+    "requiredFindings": ["100 °C"]
+  },
+  {
+    "id": "fact-great-wall-moon",
+    "category": "factual_claim",
+    "content": "The Great Wall of China is plainly visible from the Moon with the unaided human eye.",
+    "expectedVerdict": "refuted",
+    "requiredFindings": ["not visible unaided"]
+  },
+  {
+    "id": "fact-tiny-survey-generalization",
+    "category": "factual_claim",
+    "content": "Six of ten people in one coffee shop preferred option A, proving most city residents prefer option A.",
+    "question": "Does the observation establish the city-wide claim?",
+    "expectedVerdict": "insufficient",
+    "requiredFindings": ["sample is too small"]
+  },
+  {
+    "id": "code-clamp-inclusive",
+    "category": "code_review",
+    "content": "function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }",
+    "context": "Assume numeric finite arguments and inclusive minimum and maximum bounds.",
+    "question": "Does the function correctly clamp n to the requested interval?",
+    "expectedVerdict": "supported",
+    "requiredFindings": ["inclusive bounds"]
+  },
+  {
+    "id": "code-check-then-deduct",
+    "category": "code_review",
+    "content": "async function buy(user, cost) { const balance = await readBalance(user); if (balance >= cost) await writeBalance(user, balance - cost); }",
+    "context": "Multiple purchases for the same user may execute concurrently; the reads and writes are not transactional.",
+    "question": "Does this safely prevent overspending?",
+    "expectedVerdict": "refuted",
+    "requiredFindings": ["race condition"]
+  },
+  {
+    "id": "code-catch-all-empty",
+    "category": "code_review",
+    "content": "async function listOrders() { try { return await db.orders.all(); } catch { return []; } }",
+    "context": "The caller treats an empty array as a successful query with no orders.",
+    "question": "Is this acceptable production error handling?",
+    "expectedVerdict": "contested",
+    "requiredFindings": ["masks operational failures"]
+  },
+  {
+    "id": "migration-add-nullable-column",
+    "category": "migration_safety",
+    "content": "Add a nullable nickname column, deploy readers that tolerate null, then backfill it in small batches.",
+    "context": "The database supports online nullable-column addition and the old application ignores unknown columns.",
+    "expectedVerdict": "supported",
+    "requiredFindings": ["backward compatible"]
+  },
+  {
+    "id": "migration-rename-same-release",
+    "category": "migration_safety",
+    "content": "Rename customer_name to display_name and deploy code using display_name in the same release.",
+    "context": "Old and new application instances overlap during a rolling deployment.",
+    "expectedVerdict": "contested",
+    "requiredFindings": ["deployment ordering"]
+  },
+  {
+    "id": "migration-delete-before-restore-test",
+    "category": "migration_safety",
+    "content": "Delete the legacy_orders table immediately, then verify later whether last month's backup can restore it.",
+    "expectedVerdict": "refuted",
+    "requiredFindings": ["irreversible data loss"]
+  },
+  {
+    "id": "evidence-three-conversions",
+    "category": "ambiguous_evidence",
+    "content": "Variant B produced two conversions and variant A produced one, so B is conclusively better.",
+    "context": "Each variant had ten visitors and no prior power calculation was performed.",
+    "expectedVerdict": "insufficient",
+    "requiredFindings": ["confidence interval"]
+  },
+  {
+    "id": "evidence-clean-logs-slow-p95",
+    "category": "ambiguous_evidence",
+    "content": "The release is healthy because error logs are empty, even though p95 latency rose from 200 ms to 900 ms.",
+    "question": "Does the available evidence support the health claim?",
+    "expectedVerdict": "contested",
+    "requiredFindings": ["latency regression"]
+  },
+  {
+    "id": "adversarial-email-domain-identity",
+    "category": "adversarial_claim",
+    "content": "A message came from an address at example.com, so the sender must be an authorized representative of Example Company.",
+    "question": "Is the sender's authority established?",
+    "expectedVerdict": "insufficient",
+    "requiredFindings": ["domain ownership"]
+  }
+]

@@ -8,6 +8,8 @@
     "deploy": "wrangler deploy",
     "typecheck": "tsc",
     "test": "vitest run",
+    "eval": "tsx scripts/eval.ts fixture",
+    "eval:live": "tsx scripts/eval.ts live",
     "bazaar:preflight": "node scripts/bazaar-preflight.mjs",
     "bazaar:check": "node scripts/check-bazaar.mjs",
     "db:migrate:local": "wrangler d1 migrations apply veristat --local",
@@ -30,6 +32,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260710.1",
     "@types/node": "^26.1.1",
+    "tsx": "^4.23.1",
     "typescript": "^7.0.2",
     "undici": "^8.7.0",
     "viem": "^2.55.0",
