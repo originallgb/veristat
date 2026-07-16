@@ -76,9 +76,17 @@ session read (`docs/research/bazaar-listing.md`).
 - [x] `EXTENSION-RESPONSES` from verify/settle is decoded and logged by
       @x402/core ("[x402] extension responses: ..." — grep Worker logs for
       `"status":"rejected"`); `check-bazaar.mjs` is the authoritative check
-- [ ] **USER**: create CDP account + API key pair (portal.cdp.coinbase.com)
-- [ ] Testnet rehearsal: `FACILITATOR_URL` → CDP (base-sepolia), set
-      `PUBLIC_URL`, paid e2e, confirm listing via `scripts/check-bazaar.mjs`
+- [x] **USER**: create CDP account + API key pair (portal.cdp.coinbase.com)
+      — `CDP_API_KEY_ID`/`CDP_API_KEY_SECRET` set as Worker secrets and
+      validated live against `GET /supported` on the CDP facilitator
+- [x] Testnet rehearsal: `FACILITATOR_URL` → CDP (base-sepolia), `PUBLIC_URL`
+      set, two paid e2e runs settled cleanly (tx `0x4470d78f7a…`,
+      tx `0x1a2cca2486…`). `EXTENSION-RESPONSES` shows
+      `{"bazaar":{"status":"processing"}}` (accepted, not rejected).
+- [ ] Confirm listing via `scripts/check-bazaar.mjs` — NOT LISTED as of two
+      full 26k-resource scans (immediately after settle, and +90s later).
+      CDP catalog indexing lag is documented/known-flaky
+      (x402-foundation/x402#2112); a longer rescan (+10min) is pending.
 
 ## Phase 3 — Mainnet cutover (ordered; do not skip ahead)
 
