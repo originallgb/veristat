@@ -13,8 +13,9 @@ remains the historical product/build decision record.
 - Testnet receiving address:
   `0x86CdAe1A22458442BaB9E10216a7E96b606d3635`
 - D1 database: `veristat`, id `63379492-64ce-48a0-b39a-82aa54726dae`
-- Last verified deployed Worker version before this work:
-  `cf0d4155-07f0-4de0-85d0-6936d90b48fb`
+- Active Worker version: `7874ca15-2abf-4006-af13-d27fbdb54b47`, deployed
+  from Git commit `8328f3cd9ab7c910d82469e2b3b8286a52c2fc20` at
+  `2026-07-16T14:31:08.654414Z`.
 - Mainnet is not enabled. The test receiver is not the operator's mainnet
   receiving address.
 
@@ -29,25 +30,24 @@ remains the historical product/build decision record.
   Base Sepolia USDC requirement, and MCP Bazaar declaration.
 - `npm run bazaar:preflight` passes against production without making a
   payment or printing the signed quote token.
+- The single operator-authorized `$0.50` Base Sepolia diagnostic settled
+  successfully. Its chain receipt and D1 settlement/request rows agree, and
+  both filtered Bazaar extension responses were `processing`, not `rejected`.
 - CDP merchant lookup, semantic search, and catalog checks still return no
-  exact Veristat listing.
+  exact Veristat listing through the +60-minute checkpoint.
+- The sanitized reproduction is attached to x402-foundation/x402#2112 as
+  [comment 4993727120](https://github.com/x402-foundation/x402/issues/2112#issuecomment-4993727120).
 
 ## Current gate
 
 Do not switch to mainnet until the Phase 2 diagnostic closeout in
 `docs/ROADMAP.md` is complete or the operator explicitly records a waiver.
-The next paid action is exactly one Base Sepolia call with:
-
-1. the updated code deployed and its Worker version recorded;
-2. a filtered Worker tail capturing only sanitized x402 extension status;
-3. `BUYER_PRIVATE_KEY` supplied securely in the environment by the operator;
-4. `EVIDENCE_FILE` writing the sanitized receipt/challenge record; and
-5. merchant, semantic-search, and exact catalog checks at 10, 30, and 60
-   minutes.
-
-If the listing remains absent, attach the sanitized evidence to
-`x402-foundation/x402#2112`. Never include wallet private keys, CDP secrets,
-payment signatures/payloads, quote tokens, prompts, or verdict bodies.
+Do not make another paid probe. The controlled evidence sequence and upstream
+escalation are complete, but the listing is still absent. The next decision is
+operator-only: keep Base Sepolia blocked while awaiting upstream visibility,
+or explicitly record the narrow Bazaar-listing waiver. Never include wallet
+private keys, CDP secrets, payment signatures/payloads, quote tokens, prompts,
+or verdict bodies.
 
 ## Repository state conventions
 
@@ -72,5 +72,6 @@ VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
   NETWORK=eip155:84532 E2E_UNPAID_ONLY=1 node scripts/e2e.mjs
 ```
 
-See `docs/session-logs/2026-07-16-codex-resumption.md` for the evidence and
-`docs/decisions/0001-bazaar-before-mainnet.md` for the gate rationale.
+See `docs/session-logs/2026-07-16-bazaar-controlled-rehearsal.md` for the paid
+diagnostic evidence and `docs/decisions/0001-bazaar-before-mainnet.md` for the
+gate rationale.

@@ -23,13 +23,14 @@ Deployed for a **Base Sepolia rehearsal** at
 Coinbase CDP facilitator. D1 `veristat` is wired to
 `63379492-64ce-48a0-b39a-82aa54726dae`; `PAY_TO_ADDRESS` is the throwaway
 testnet receiver `0x86CdAe1A22458442BaB9E10216a7E96b606d3635`, not the future
-mainnet receiver. The active Worker version at the 2026-07-16 handoff is
-`cf0d4155-07f0-4de0-85d0-6936d90b48fb`.
+mainnet receiver. The active Worker version is
+`7874ca15-2abf-4006-af13-d27fbdb54b47`.
 
-Two discovery-bearing payments settled with Bazaar status `processing`, but
-the resource remains absent from the catalog and merchant lookup. Finish the
-ordered Phase 2 diagnostic in `docs/ROADMAP.md` before Phase 3; do not flip
-`NETWORK` to `eip155:8453` ad hoc.
+Three discovery-bearing payments settled. The final controlled diagnostic
+returned Bazaar status `processing` twice, but the resource remained absent
+from merchant/search/full-catalog checks through +60 minutes. Evidence is on
+x402-foundation/x402#2112. Phase 3 still requires an explicit operator waiver;
+do not flip `NETWORK` to `eip155:8453` ad hoc.
 
 ## Commands
 
@@ -59,11 +60,9 @@ The payment layer and the product pipeline are deliberately decoupled:
 
 ## Deployment
 
-- The next deploy activates Cloudflare version metadata in `/health`. Verify its
-  `version` equals the version ID printed by `wrangler deploy`, preferably with
+- Cloudflare version metadata is active in `/health`. Verify its `version`
+  equals the version ID printed by `wrangler deploy`, preferably with
   `EXPECTED_VERSION=<id> VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp node scripts/smoke.mjs`.
-  The currently active deployment predates this health shape and returns only
-  `{"ok":true}`.
 - `scripts/smoke.mjs` defaults to localhost. A stale `wrangler dev --remote`
   listener on port 8787 can validate the wrong deployment or produce a
   misleading failure. For production checks, always pass the public

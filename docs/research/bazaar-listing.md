@@ -88,6 +88,10 @@ this uncertainty.
   evidence, not wallet churn or repeated paid probes. Check the payee-specific
   merchant endpoint and semantic search first, then the full catalog at +10,
   +30, and +60 minutes. Escalate the sanitized package at +60.
+- That controlled diagnostic completed on 2026-07-16: both extension responses
+  were `processing`, the chain/D1 evidence was coherent, and exact discovery
+  remained empty through +60 minutes. Evidence was attached after the issue
+  closed as [x402-foundation/x402#2112 comment 4993727120](https://github.com/x402-foundation/x402/issues/2112#issuecomment-4993727120).
 
 The controlled evidence may retain public URL/chain/catalog identifiers and
 sanitized extension status. It excludes private keys, payment signatures or

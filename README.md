@@ -25,13 +25,14 @@ As of 2026-07-16, veristat is deployed for a **Base Sepolia rehearsal**:
 - Facilitator: `https://api.cdp.coinbase.com/platform/v2/x402`
 - D1 database: `veristat` (`63379492-64ce-48a0-b39a-82aa54726dae`)
 - Testnet receiver: `0x86CdAe1A22458442BaB9E10216a7E96b606d3635`
-- Active Worker version at handoff: `cf0d4155-07f0-4de0-85d0-6936d90b48fb`
+- Active Worker version: `7874ca15-2abf-4006-af13-d27fbdb54b47`
 
-Two discovery-bearing testnet payments settled and CDP returned
-`{"bazaar":{"status":"processing"}}`, but the resource is still absent from
-the Bazaar catalog and merchant lookup. That is the Phase 2 blocker; do not
-start the mainnet canary until the ordered diagnostic in `docs/ROADMAP.md` is
-complete. The exact handoff and evidence are in `docs/context/current-state.md`.
+Three discovery-bearing testnet payments have settled. The final controlled
+diagnostic returned `{"bazaar":{"status":"processing"}}` on both verify and
+settle, but the resource remained absent from merchant lookup, semantic search,
+and the full Bazaar catalog through +60 minutes. Sanitized evidence is attached
+to x402-foundation/x402#2112. That remains the Phase 2 blocker unless the
+operator explicitly records the narrow listing waiver in `docs/ROADMAP.md`.
 
 ## Tools
 
@@ -104,10 +105,9 @@ EXPECTED_VERSION=<version-id-from-deploy> \
   node scripts/smoke.mjs
 ```
 
-The next deploy activates Cloudflare version metadata in `/health`; from that
-point, the smoke command must report the same version ID that `wrangler deploy`
-created. The current active version above predates that health payload and
-still returns only `{"ok":true}`.
+Cloudflare version metadata is active in `/health`. The smoke command must
+report the same version ID that `wrangler deploy` created; the current verified
+value is the active Worker version shown above.
 
 `scripts/smoke.mjs` defaults to `localhost:8787`. A stale
 `wrangler dev --remote` process there can make a production check appear to fail or validate

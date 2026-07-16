@@ -94,9 +94,11 @@ x402.org remains fine for plain payment testing. Note the CDP catalog is
       tx `0x1a2cca2486…`). `EXTENSION-RESPONSES` shows
       `{"bazaar":{"status":"processing"}}` (accepted for asynchronous
       processing, not proof of listing).
-- [ ] Confirm listing via `scripts/check-bazaar.mjs` — NOT LISTED as of two
-      full 26k-resource scans (immediately after settle, and +90s later).
-      The controlled final rehearsal below replaces further ad hoc calls.
+- [ ] Confirm listing via `scripts/check-bazaar.mjs` — the controlled final
+      rehearsal remained NOT LISTED at baseline, +10, +30, and +60 minutes.
+      Sanitized evidence was attached to x402-foundation/x402#2112 in
+      [comment 4993727120](https://github.com/x402-foundation/x402/issues/2112#issuecomment-4993727120).
+      This item remains open unless the operator records the narrow waiver.
 
 ### Phase 2 exit gate — one controlled, auditable rehearsal
 
@@ -106,18 +108,18 @@ secret-handling rules.
 
 1. [x] Dependencies aligned on x402 2.18.x; the commands below re-run the
        typecheck and tests before any payment.
-2. [ ] Record the deployed Worker version, then pass version-aware smoke and
+2. [x] Record the deployed Worker version, then pass version-aware smoke and
        the read-only Bazaar preflight against the exact production URL.
-3. [ ] Start a Worker tail filtered to the SDK's already-sanitized
+3. [x] Start a Worker tail filtered to the SDK's already-sanitized
        `[x402] extension responses:` messages.
-4. [ ] Make **one** Base Sepolia paid call with `EVIDENCE_FILE` set to a
+4. [x] Make **one** Base Sepolia paid call with `EVIDENCE_FILE` set to a
        tracked JSON path under `docs/session-logs/`.
-5. [ ] Join the evidence across the payment receipt, BaseScan transaction,
+5. [x] Join the evidence across the payment receipt, BaseScan transaction,
        D1 settlement/request rows, and filtered verify/settle extension status.
-6. [ ] Run `scripts/check-bazaar.mjs` at +10, +30, and +60 minutes. It checks
+6. [x] Run `scripts/check-bazaar.mjs` at +10, +30, and +60 minutes. It checks
        the payee-specific merchant endpoint, semantic search, then the full
        catalog for an exact resource URL match.
-7. [ ] If still absent at +60 minutes, append the sanitized evidence to
+7. [x] If still absent at +60 minutes, append the sanitized evidence to
        x402-foundation/x402#2112 before spending another canary payment.
 
 The evidence file may contain public chain/catalog identifiers: target URL,
