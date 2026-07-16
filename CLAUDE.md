@@ -43,6 +43,10 @@ The payment layer and the product pipeline are deliberately decoupled:
 - **`src/logging.ts` + `migrations/`** — D1: `settlements` (demand proof) and `requests` (eval flywheel, no payer identity). Logging must never fail a paid request; errors are swallowed.
 - **`src/index.ts`** — Hono for `/`, `/health`, `/price`; `/mcp` is routed to the McpAgent before Hono.
 
+## Deployment
+
+- Always verify actual health by checking the new deploy's version/build ID, not just an HTTP 200 — a passing health check may come from a prior deployment still serving traffic (e.g. `wrangler deployments list` / the `/health` response's version field vs. the version just deployed).
+
 ## Constraints & placeholders
 
 - Placeholders the operator supplies: `PAY_TO_ADDRESS` + `database_id` in `wrangler.jsonc`; secrets `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `QUOTE_SIGNING_KEY` (`.dev.vars` locally, `wrangler secret put` in prod). Never invent or hardcode real keys.
