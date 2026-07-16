@@ -38,7 +38,7 @@ operator explicitly records the narrow listing waiver in `docs/ROADMAP.md`.
 
 | Tool | Price | Status |
 |---|---|---|
-| `consensus_check` | $0.50 (3-panel) / $1.50 (5-panel) + $0.50 large-input surcharge; exact price quoted in the 402 | **live** (MVP routes to 3-panel) |
+| `consensus_check` | $0.50 for the current fulfilled 3-panel check + $0.50 large-input surcharge; exact price quoted in the 402 | **live** (`panel_size: 5` is accepted for compatibility but fulfilled and quoted as 3-panel) |
 | `get_sample_verdict` | free | live |
 | `research_fanout` / `get_research_result` | $12–25 dynamic | stub — returns `NOT_AVAILABLE` |
 

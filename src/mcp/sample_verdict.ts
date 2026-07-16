@@ -1,4 +1,5 @@
 import type { VerdictResponse } from "./schemas";
+import { computePriceUSD } from "../payments/quoting";
 
 /** Canned-but-real example verdict for the free discovery tool (spec §2). */
 export const SAMPLE_VERDICT: VerdictResponse = {
@@ -47,13 +48,32 @@ export const METHODOLOGY = `Veristat fans your input to a heterogeneous panel of
 export function priceCard(network: string) {
   return {
     consensus_check: {
-      panel_3: "$0.50",
-      panel_5: "$1.50 (accepted; MVP routes to 3-panel)",
+      fulfilled_panel_size: 3,
+      current_price: "$0.50",
+      accepted_panel_size_values: [3, 5],
+      panel_size_5_compatibility:
+        "accepted for compatibility; the current MVP fulfills and quotes it as a 3-panel check",
       large_input_surcharge: "+$0.50 when content+context exceed ~8k tokens",
       quote: "exact price returned in the 402 challenge, quote valid 5 minutes"
     },
     research_fanout: "coming soon ($12–25, quoted dynamically)",
     payment: `x402 exact scheme, USDC, network ${network}`,
     accounts_required: "none — the payment is the credential"
+  };
+}
+
+export function pricePreview(contentChars: number) {
+  const fulfilledPrice = computePriceUSD({ panelSize: 3, contentChars });
+
+  return {
+    // Preserve the original public response keys. Both values reflect the
+    // three-panel fulfillment path until five-panel execution is live.
+    panel_3_usd: fulfilledPrice,
+    panel_5_usd: fulfilledPrice,
+    fulfilled_panel_size: 3,
+    consensus_check_usd: fulfilledPrice,
+    accepted_panel_size_values: [3, 5],
+    note:
+      "The current MVP fulfills and quotes both accepted panel_size values as a 3-model panel."
   };
 }

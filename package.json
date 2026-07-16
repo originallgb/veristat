@@ -10,6 +10,7 @@
     "test": "vitest run",
     "eval": "tsx scripts/eval.ts fixture",
     "eval:live": "tsx scripts/eval.ts live",
+    "registry:validate": "node scripts/validate-registry.mjs",
     "bazaar:preflight": "node scripts/bazaar-preflight.mjs",
     "bazaar:check": "node scripts/check-bazaar.mjs",
     "db:migrate:local": "wrangler d1 migrations apply veristat --local",
