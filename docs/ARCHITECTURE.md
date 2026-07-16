@@ -11,7 +11,7 @@ flowchart TB
     Agent["Agent / MCP client\n(withX402Client)"]
 
     subgraph CF["Cloudflare Worker (veristat)"]
-        Hono["Hono routes\nsrc/index.ts\n/  /health  /price"]
+        Hono["Hono routes\nsrc/index.ts\n/  /health  /price\nversion metadata"]
         MCP["VeristatMCP\n(McpAgent, Durable Object)\nsrc/mcp/server.ts\nstreamable HTTP /mcp"]
         Gate["PaymentGate\nsrc/payments/x402.ts"]
         Quote["quoting.ts\ndeterministic price +\nHMAC 5-min quote token"]
@@ -115,3 +115,43 @@ after the tool callback succeeds** — every failure branch above either never
 reaches `Fac->>Gate: settle` or fails before `D1` is written. A settlement
 row in D1 without a matching verdict is a release blocker, not a flake
 (`docs/TESTING.md` invariant #1).
+
+## Bazaar rehearsal evidence flow
+
+Discovery status is intentionally assembled from several narrow sources. No
+single signal is sufficient: `processing` is nonterminal, a chain transaction
+does not prove catalog visibility, and a catalog miss does not invalidate a
+successful settlement.
+
+```mermaid
+flowchart LR
+    Version["Cloudflare deployment id\n/health + EXPECTED_VERSION"]
+    Preflight["Read-only MCP preflight\nexact URL + schema-valid Bazaar ext"]
+    Tail["Filtered Worker tail\nsanitized extension status only"]
+    Paid["One paid call\nsanitized JSON evidence"]
+    Chain["BaseScan\ntransaction"]
+    D1Check["D1 request + settlement\njoined by request id"]
+    Merchant["CDP merchant lookup\nexact resource URL"]
+    Search["CDP semantic search\nexact resource URL"]
+    Catalog["CDP full catalog fallback\nexact resource URL"]
+    Session["Tracked session note\nno secrets or raw tail"]
+
+    Version --> Preflight --> Paid
+    Tail --> Paid
+    Paid --> Chain
+    Paid --> D1Check
+    Paid --> Merchant
+    Merchant -->|not found| Search
+    Search -->|not found| Catalog
+    Chain --> Session
+    D1Check --> Session
+    Tail --> Session
+    Merchant --> Session
+    Search --> Session
+    Catalog --> Session
+```
+
+The discovery checks run at +10, +30, and +60 minutes. At +60, an exact URL
+match closes the Phase 2 gate; a miss produces an issue #2112 evidence package
+and leaves mainnet blocked unless the operator records the narrow waiver in
+`docs/ROADMAP.md`. Secret exclusions and commands live in `docs/RUNBOOK.md`.

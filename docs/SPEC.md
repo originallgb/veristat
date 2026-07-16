@@ -6,6 +6,15 @@ Decision context: strategy session 2026-07-10. Landscape verified against Coinba
 > Committed verbatim from the originating strategy session so every future
 > session starts from a decision, not a re-litigation. Strategy rationale:
 > `docs/STRATEGY.md`. Live implementation status: `docs/ROADMAP.md`.
+>
+> **Operational errata (2026-07-16):** this is the immutable decision record,
+> not the source of truth for live infrastructure. Use `wrangler.jsonc`,
+> `docs/ROADMAP.md`, and `docs/context/current-state.md` for current values. The
+> active rehearsal is Base Sepolia (`eip155:84532`) through Coinbase CDP at
+> `https://veristat.grant-23a.workers.dev/mcp`, with the live D1 binding and a
+> throwaway test receiver already configured. Bazaar discovery remains the
+> launch blocker. Historical statements below such as `NETWORK=base-sepolia`,
+> “0 Workers,” or placeholder bindings must not be copied into operations.
 
 ---
 

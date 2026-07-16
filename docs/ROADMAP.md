@@ -16,23 +16,26 @@ discovery extension. Requirements (verified against CDP docs, July 2026):
 1. Verify/settle must go through the CDP facilitator
    (`https://api.cdp.coinbase.com/platform/v2/x402`, CDP API keys required).
 2. The 402 payment requirements must carry the discovery declaration
-   (`discoverable: true` + JSON Schema for the input) — served by
+   (MCP tool/transport metadata + JSON Schema for the input) — served by
    `bazaarResourceServerExtension` / `declareDiscoveryExtension` from
    `@x402/extensions`.
 3. `paymentPayload.resource` must be populated so CDP knows what to catalog.
 4. The declaration undergoes **strict JSON Schema validation**; a `"rejected"`
    status in the `EXTENSION-RESPONSES` verify/settle response header means the
-   service silently never lists (known flakiness: x402-foundation/x402#2112 —
-   the header is sometimes absent; poll the discovery endpoint to confirm).
+   service silently never lists. `"processing"` means the declaration was
+   accepted for asynchronous work; it is **not** a terminal status and does not
+   prove the resource is visible. The header can also be absent
+   (x402-foundation/x402#2112), so discovery reads remain authoritative.
 5. Recency filter: resources with no settled activity in 30 days drop out of
    results — listing is not permanent; organic or canary traffic keeps it live.
 
 Testnet rehearsal is supported (Base Sepolia through the CDP facilitator with
-the same keys). The x402.org facilitator exposes **no** public discovery
-catalog (verified 2026-07-12 — only /verify, /settle, /supported), so the
-listing rehearsal requires CDP keys; x402.org remains fine for plain payment
-testing. Note the catalog is ~25,500 resources, not the ~100 the strategy
-session read (`docs/research/bazaar-listing.md`).
+the same keys). CDP documentation currently describes a separate x402.org
+catalog, but live probes on 2026-07-12 and 2026-07-16 returned 404 for that
+path while `/supported` remained healthy. Bazaar rehearsal therefore uses CDP;
+x402.org remains fine for plain payment testing. Note the CDP catalog is
+~25,500 resources, not the ~100 the strategy session read
+(`docs/research/bazaar-listing.md`).
 
 ---
 
@@ -56,6 +59,13 @@ session read (`docs/research/bazaar-listing.md`).
 - [x] `scripts/e2e.mjs` — full paid-call matrix against any VERISTAT_URL
 - [x] `scripts/check-bazaar.mjs` — poll facilitator discovery catalog for us
       (validated against the live CDP catalog, both directions)
+- [x] `scripts/bazaar-preflight.mjs` — read-only validation of the deployed
+      unpaid challenge, exact `resource.url`, payment fields, and MCP Bazaar
+      declaration before spending faucet or real USDC
+- [x] Pin the payment/discovery stack to one compatible minor:
+      `@x402/core`, `@x402/evm`, and `@x402/extensions` 2.18.x
+- [x] Version-aware production smoke: `/health` exposes the Cloudflare version
+      metadata id and `scripts/smoke.mjs` accepts `EXPECTED_VERSION`
 - [x] `scripts/dashboard.mjs` — D1 settlements/requests with organic split
 - [x] GitHub Actions CI: typecheck + vitest on every push/PR
 - [x] **USER**: fund generated testnet wallets at https://faucet.circle.com
@@ -82,31 +92,71 @@ session read (`docs/research/bazaar-listing.md`).
 - [x] Testnet rehearsal: `FACILITATOR_URL` → CDP (base-sepolia), `PUBLIC_URL`
       set, two paid e2e runs settled cleanly (tx `0x4470d78f7a…`,
       tx `0x1a2cca2486…`). `EXTENSION-RESPONSES` shows
-      `{"bazaar":{"status":"processing"}}` (accepted, not rejected).
+      `{"bazaar":{"status":"processing"}}` (accepted for asynchronous
+      processing, not proof of listing).
 - [ ] Confirm listing via `scripts/check-bazaar.mjs` — NOT LISTED as of two
       full 26k-resource scans (immediately after settle, and +90s later).
-      CDP catalog indexing lag is documented/known-flaky
-      (x402-foundation/x402#2112); a longer rescan (+10min) is pending.
+      The controlled final rehearsal below replaces further ad hoc calls.
+
+### Phase 2 exit gate — one controlled, auditable rehearsal
+
+Production testnet target: **`https://veristat.grant-23a.workers.dev/mcp`**.
+Run this sequence once, in order; `docs/RUNBOOK.md` contains the commands and
+secret-handling rules.
+
+1. [x] Dependencies aligned on x402 2.18.x; the commands below re-run the
+       typecheck and tests before any payment.
+2. [ ] Record the deployed Worker version, then pass version-aware smoke and
+       the read-only Bazaar preflight against the exact production URL.
+3. [ ] Start a Worker tail filtered to the SDK's already-sanitized
+       `[x402] extension responses:` messages.
+4. [ ] Make **one** Base Sepolia paid call with `EVIDENCE_FILE` set to a
+       tracked JSON path under `docs/session-logs/`.
+5. [ ] Join the evidence across the payment receipt, BaseScan transaction,
+       D1 settlement/request rows, and filtered verify/settle extension status.
+6. [ ] Run `scripts/check-bazaar.mjs` at +10, +30, and +60 minutes. It checks
+       the payee-specific merchant endpoint, semantic search, then the full
+       catalog for an exact resource URL match.
+7. [ ] If still absent at +60 minutes, append the sanitized evidence to
+       x402-foundation/x402#2112 before spending another canary payment.
+
+The evidence file may contain public chain/catalog identifiers: target URL,
+network, asset, payee, amount, transaction hash, payer, and request id. It must
+never contain a private key, payment signature/payload, quote token, CDP JWT or
+API secret, panel vendor key, input claim/context, full verdict, or raw Worker
+tail. `docs/TESTING.md` defines the record boundary.
 
 ## Phase 3 — Mainnet cutover (ordered; do not skip ahead)
+
+**Gate:** do not flip to mainnet until the Phase 2 controlled rehearsal has a
+successful receipt and coherent D1/on-chain evidence, and the exact resource
+is visible in Bazaar discovery. If the call is sound but Bazaar remains absent
+after +60 minutes and issue #2112 has been updated, only the operator may waive
+the listing part of the gate. Record that explicit waiver, rationale, accepted
+risk, and rollback decision in `docs/session-logs/`; a waiver never bypasses
+Workers Paid, receiver-wallet, payment-integrity, or evidence requirements.
 
 1. [ ] **USER**: upgrade Workers plan to Paid ($5/mo) — *before* any mainnet
        call (free-plan 10ms CPU cap can kill a request *after* settlement =
        charging a wallet and returning nothing)
 2. [ ] **USER**: real `PAY_TO_ADDRESS` (Base mainnet USDC receiving address —
-       Coinbase account address or hardware wallet; replaces `0x0000…`)
+       Coinbase account address or hardware wallet; replaces the throwaway
+       Base Sepolia receiver)
 3. [ ] Config flip: `NETWORK=eip155:8453`, `FACILITATOR_URL` → CDP mainnet,
        secrets via `wrangler secret put`, deploy
 4. [ ] **USER**: canary buyer wallet, ~$5 USDC on Base mainnet, *not* the
        deployer's wallet
-5. [ ] Canary paid call → verifies e2e AND triggers Bazaar cataloging; confirm
-       via `scripts/check-bazaar.mjs` + x402scan + BaseScan tx
-6. [ ] Insert canary/test wallet addresses into D1 `known_wallets` (organic
+5. [ ] Version-aware smoke + read-only Bazaar preflight against the exact
+       deployed mainnet URL, then one canary paid call with sanitized evidence
+6. [ ] Confirm the exact resource via merchant/search/full checks at +10, +30,
+       and +60 minutes, plus x402scan and BaseScan; escalate or record the
+       operator waiver before continuing
+7. [ ] Insert canary/test wallet addresses into D1 `known_wallets` (organic
        split instrumentation)
 
 ## Phase 4 — Official MCP registry
 
-- [ ] Finalize `server.json`: `io.github.originallgb/veristat`, real
+- [x] Finalize `server.json`: `io.github.originallgb/veristat`, real
       workers.dev URL
 - [ ] **USER**: `mcp-publisher login github` (device-code flow)
 - [ ] `mcp-publisher publish` (validate with `--dry-run` first)

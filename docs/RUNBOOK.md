@@ -12,6 +12,12 @@ Local dev mirrors these in `.dev.vars` (never committed). Vars (not secrets)
 live in `wrangler.jsonc`: `NETWORK`, `FACILITATOR_URL`, `PAY_TO_ADDRESS`,
 panel model ids.
 
+Never record or commit private keys, payment signatures/payloads, quote tokens,
+CDP JWTs/API secrets, vendor API keys, input claims/context, full verdicts, or
+raw Worker tails. Transaction hashes, chain/network, amount, public asset/payee,
+payer, request id, deployment id, and sanitized extension status are acceptable
+operational evidence.
+
 ## Dashboard (D1 is the dashboard)
 
 `node scripts/dashboard.mjs` wraps these; raw queries:
@@ -45,6 +51,119 @@ The facilitator is a constructor argument (`FacilitatorClient` seam in
 
 Order of facilitators: x402.org (testnet dev) → CDP base-sepolia (rehearsal)
 → CDP mainnet (launch) → Cloudflare Monetization Gateway (when off waitlist).
+
+## Controlled Bazaar rehearsal
+
+Use this procedure once to close the Phase 2 gate. The production testnet MCP
+endpoint is **`https://veristat.grant-23a.workers.dev/mcp`**.
+
+### Prerequisites
+
+- x402 packages resolve to 2.18.x for core, EVM, and extensions.
+- Wrangler is authenticated and the Worker has its panel, quote, and CDP
+  secrets. Do not read or copy those secret values.
+- `BUYER_PRIVATE_KEY` is already present in the operator's secure shell and is
+  a funded, throwaway Base Sepolia wallet. Do not inline it in a command.
+- Only one controlled paid call will be made. Stop if preflight fails.
+
+### 1. Pin and verify the deployment
+
+Obtain the active version id using Wrangler, then use that exact value:
+
+```sh
+npx wrangler deployments status
+
+npm run typecheck && npm test
+
+EXPECTED_VERSION=<active-version-id> \
+VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
+  node scripts/smoke.mjs
+
+VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
+  npm run bazaar:preflight
+```
+
+The preflight must report `BAZAAR PREFLIGHT OK`. It validates the MCP-internal
+unpaid challenge; this is more relevant than a generic validator that expects a
+top-level HTTP 402 response.
+
+### 2. Capture only sanitized facilitator status
+
+In a separate terminal, start a server-side-filtered tail:
+
+```sh
+npx wrangler tail veristat \
+  --format pretty \
+  --search '[x402] extension responses:'
+```
+
+The installed x402 client sanitizes these messages to status/reason fields.
+Retain only the verify/settle lines for this isolated call; do not retain or
+commit the raw tail. `"rejected"` is a hard failure. `"processing"` is accepted
+but nonterminal and does not prove indexing. An absent header is inconclusive.
+
+### 3. Make one paid call and write narrow evidence
+
+```sh
+VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
+NETWORK=eip155:84532 \
+EVIDENCE_FILE=docs/session-logs/<timestamp>-bazaar-rehearsal.json \
+  node scripts/paid-call.mjs "Controlled Bazaar discovery rehearsal"
+```
+
+Stop the filtered tail after this call. Inspect the JSON before adding it to
+git. It must contain only the sanitized fields listed in the Secrets section.
+Delete/redact the artifact rather than committing it if any excluded field is
+present.
+
+### 4. Join receipt, chain, and D1 evidence
+
+Open the evidence file's Sepolia BaseScan URL and confirm the transaction. Then
+query by its request id:
+
+```sh
+npx wrangler d1 execute veristat --remote --command \
+  "SELECT request_id, tx_hash, amount_usd, network, tool, created_at FROM settlements WHERE request_id = '<request-id>'"
+
+npx wrangler d1 execute veristat --remote --command \
+  "SELECT request_id, tool, prompt_version, synthesis_version, degraded, created_at FROM requests WHERE request_id = '<request-id>'"
+```
+
+The transaction, settlement row, request row, amount, network, and request id
+must agree. A settlement without its request/verdict is a release blocker.
+
+### 5. Check discovery at +10, +30, and +60 minutes
+
+Run this same command at each checkpoint and record the timestamp/result in the
+session note:
+
+```sh
+RESOURCE_URL=https://veristat.grant-23a.workers.dev/mcp \
+PAY_TO_ADDRESS=0x86CdAe1A22458442BaB9E10216a7E96b606d3635 \
+NETWORK=eip155:84532 \
+  npm run bazaar:check
+```
+
+The script checks the merchant endpoint, semantic search, then the full catalog
+for an exact normalized URL. Do not treat same-host output or `processing` as a
+pass. CDP documents up to ten minutes of catalog caching; the later checkpoints
+distinguish cache delay from the silent-indexing class tracked in issue #2112.
+
+### 6. Escalate or close the gate
+
+If listed, mark Phase 2 complete and link the sanitized artifact/session note.
+If absent at +60 minutes, do not buy another probe. Add a sanitized report to
+https://github.com/x402-foundation/x402/issues/2112 containing:
+
+- exact resource URL, public payee, network/asset/amount
+- transaction hash and UTC settle/check timestamps
+- deployment id and x402 package versions
+- sanitized Bazaar input type/tool/transport and extension statuses
+- merchant, search, and full-scan results
+
+Mainnet stays blocked unless the operator records the explicit listing-gate
+waiver defined in `docs/ROADMAP.md`. The waiver cannot bypass Workers Paid,
+receiver-wallet, payment-integrity, or auditable-evidence gates.
 
 ## Incidents
 
@@ -98,7 +217,9 @@ gate below — treat any future CD job as testnet-only until that gate clears.
 ```sh
 npm run typecheck && npm test        # gate
 npx wrangler deploy
-VERISTAT_URL=https://<worker-url>/mcp node scripts/smoke.mjs
+EXPECTED_VERSION=<deployed-version-id> \
+VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
+  node scripts/smoke.mjs
 ```
 
 Mainnet config changes go through the Phase 3 checklist in `docs/ROADMAP.md`

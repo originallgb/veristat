@@ -20,8 +20,9 @@ Fetched 2026-07-12 from https://modelcontextprotocol.io/registry/quickstart
 
 ## veristat specifics
 
-- Placeholders to resolve in `server.json`: `REPLACE_WITH_GH_USER` →
-  `originallgb`; `REPLACE_WITH_SUBDOMAIN` → the real workers.dev subdomain.
+- Resolved on 2026-07-16: `server.json` uses
+  `io.github.originallgb/veristat`, version `1.0.0`, and
+  `https://veristat.grant-23a.workers.dev/mcp`.
 - Version in `server.json` should track releases; the registry treats each
   publish as a version entry.
 - The registry-facing description is product copy — agents read it to decide

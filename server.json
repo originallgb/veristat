@@ -1,12 +1,12 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
-  "name": "io.github.REPLACE_WITH_GH_USER/veristat",
+  "name": "io.github.originallgb/veristat",
   "description": "Independent multi-model verification: fans a claim, plan, or draft to a cross-vendor panel of frontier models (Anthropic + OpenAI + Google) and returns a structured consensus verdict — agreements, contradictions, dissent, calibrated confidence. Paid per call via x402 (USDC on Base); no vendor accounts needed. Free get_sample_verdict tool to inspect output before paying.",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://veristat.REPLACE_WITH_SUBDOMAIN.workers.dev/mcp"
+      "url": "https://veristat.grant-23a.workers.dev/mcp"
     }
   ]
 }
