@@ -14,6 +14,8 @@ is the credential — buyers need no vendor accounts.
 · `docs/ROADMAP.md` (launch phases + status) · `docs/TESTING.md` (test pyramid,
 wallet runbook) · `docs/RUNBOOK.md` (ops, incl. CI/CD)
 · `docs/ARCHITECTURE.md` (Cloudflare architecture + payment-flow diagrams)
+· `docs/EVALS.md` (quality baseline and live-run boundary)
+· `docs/plans/prelaunch-unblocked-backlog.md` (unblocked follow-on work)
 · `docs/context/current-state.md` (compact current-session handoff).
 
 ## Current deployment

@@ -25,7 +25,17 @@ remains the historical product/build decision record.
   occupied localhost for roughly 13 hours.
 - Aligned `@x402/core`, `@x402/evm`, and `@x402/extensions` on `2.18.0`.
 - `npm run typecheck` passes.
-- All 57 Vitest tests pass.
+- The combined suite passes all 47 current Vitest tests.
+- `server.json` uses the current `2025-12-11` schema, runtime/package/registry
+  versions are aligned at `1.0.0`, the offline registry validator passes, and
+  the current official `mcp-publisher validate server.json` reports valid.
+- The credential-free 12-case synthetic evaluation passes: 11/12 synthesis
+  labels, 4/12 naive-majority labels, 12/12 required findings, and zero schema
+  failures. These fixture metrics are regression evidence, not a live-provider
+  quality claim; `docs/EVALS.md` defines the operator-gated live baseline.
+- Wrangler's deployment dry run bundles successfully. No Worker deployment,
+  registry publication, paid call, project-secret access, or Phase 2/3 gate
+  change was made during the prelaunch-proof sprint.
 - Production unpaid E2E passes and exposes the correct absolute resource,
   Base Sepolia USDC requirement, and MCP Bazaar declaration.
 - `npm run bazaar:preflight` passes against production without making a
@@ -73,6 +83,8 @@ signatures/payloads, quote tokens, prompts, or verdict bodies.
 ```sh
 npm run typecheck
 npm test
+npm run registry:validate
+npm run eval
 VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp npm run bazaar:preflight
 VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
   NETWORK=eip155:84532 E2E_UNPAID_ONLY=1 node scripts/e2e.mjs
@@ -80,4 +92,5 @@ VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
 
 See `docs/session-logs/2026-07-16-bazaar-controlled-rehearsal.md` for the paid
 diagnostic evidence and `docs/decisions/0001-bazaar-before-mainnet.md` for the
-gate rationale.
+gate rationale. `docs/plans/prelaunch-unblocked-backlog.md` records the next
+unblocked slices, including the privacy/retention decision and buyer pack.
