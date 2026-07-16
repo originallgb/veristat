@@ -80,7 +80,8 @@ this uncertainty.
   `streamable-http`.
 - `@x402/core`, `@x402/evm`, and `@x402/extensions` are aligned at 2.18.x to
   avoid duplicate/mixed protocol implementations.
-- Issue #2112 remains open. Field reports now show that ordinary external EOAs
+- Issue #2112 was closed on 2026-07-16 as its original missing-header report
+  was not reproducible. Field reports show that ordinary external EOAs
   can index, so a CDP-provisioned payee is neither necessary nor sufficient.
   Other reports show declaration-carrying resources indexing within minutes,
   while individual conforming-looking routes can still be silently skipped.
@@ -92,6 +93,13 @@ this uncertainty.
   were `processing`, the chain/D1 evidence was coherent, and exact discovery
   remained empty through +60 minutes. Evidence was attached after the issue
   closed as [x402-foundation/x402#2112 comment 4993727120](https://github.com/x402-foundation/x402/issues/2112#issuecomment-4993727120).
+- A reply isolated Base Sepolia and `input.type=mcp` as the two remaining axes.
+  Live catalog checks weigh against Sepolia: testnet resources are present,
+  while the catalog reported 25,387 `http` resources and zero `mcp` resources.
+  This conflicts with the 2.18 extension SDK's explicit MCP discovery types
+  and points to an indexing/backend capability mismatch. The follow-up is
+  [comment 4994040237](https://github.com/x402-foundation/x402/issues/2112#issuecomment-4994040237).
+  Do not fund another A/B probe until CDP confirms expected MCP behavior.
 
 The controlled evidence may retain public URL/chain/catalog identifiers and
 sanitized extension status. It excludes private keys, payment signatures or

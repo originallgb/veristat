@@ -98,7 +98,14 @@ x402.org remains fine for plain payment testing. Note the CDP catalog is
       rehearsal remained NOT LISTED at baseline, +10, +30, and +60 minutes.
       Sanitized evidence was attached to x402-foundation/x402#2112 in
       [comment 4993727120](https://github.com/x402-foundation/x402/issues/2112#issuecomment-4993727120).
-      This item remains open unless the operator records the narrow waiver.
+      A community reply proposed Sepolia versus MCP as the remaining
+      differential. Live discovery already contains Base Sepolia resources,
+      while `type=http` reports 25,387 entries and `type=mcp` reports zero.
+      The MCP-indexing question is posted in
+      [comment 4994040237](https://github.com/x402-foundation/x402/issues/2112#issuecomment-4994040237).
+      Await CDP confirmation; do not spend on the suggested paid A/B probes
+      without a new operator decision. This item remains open unless the
+      operator records the narrow waiver.
 
 ### Phase 2 exit gate — one controlled, auditable rehearsal
 

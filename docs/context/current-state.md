@@ -37,6 +37,11 @@ remains the historical product/build decision record.
   exact Veristat listing through the +60-minute checkpoint.
 - The sanitized reproduction is attached to x402-foundation/x402#2112 as
   [comment 4993727120](https://github.com/x402-foundation/x402/issues/2112#issuecomment-4993727120).
+- A follow-up suggested the remaining gate was either Base Sepolia or
+  `input.type=mcp`. Live checks found Base Sepolia resources in search,
+  25,387 HTTP catalog entries, and zero MCP entries. The evidence and request
+  for CDP confirmation are in
+  [comment 4994040237](https://github.com/x402-foundation/x402/issues/2112#issuecomment-4994040237).
 
 ## Current gate
 
@@ -44,10 +49,11 @@ Do not switch to mainnet until the Phase 2 diagnostic closeout in
 `docs/ROADMAP.md` is complete or the operator explicitly records a waiver.
 Do not make another paid probe. The controlled evidence sequence and upstream
 escalation are complete, but the listing is still absent. The next decision is
-operator-only: keep Base Sepolia blocked while awaiting upstream visibility,
-or explicitly record the narrow Bazaar-listing waiver. Never include wallet
-private keys, CDP secrets, payment signatures/payloads, quote tokens, prompts,
-or verdict bodies.
+operator-only: keep Base Sepolia blocked while awaiting CDP confirmation of
+MCP indexing support, or explicitly record the narrow Bazaar-listing waiver.
+Do not run the suggested mainnet-MCP or Sepolia-HTTP paid A/B probes without a
+new operator decision. Never include wallet private keys, CDP secrets, payment
+signatures/payloads, quote tokens, prompts, or verdict bodies.
 
 ## Repository state conventions
 
