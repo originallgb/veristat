@@ -29,6 +29,23 @@ The ordering is intentional:
 | Buyer integration pack | Design and unpaid path can start | Dedicated undici dispatcher and stable three-panel contract | Approval before any paid smoke |
 | Launch-material preparation | Drafting can start | Stable public copy and privacy disclosure | Approval before any external submission or outreach |
 
+## GitHub issue ledger
+
+The original idea dump is retained as the index in
+[#3](https://github.com/originallgb/veristat/issues/3). Work is merged into
+the smallest set of slices with distinct outcomes and gates:
+
+| Issue | Slice | Dependency |
+|---|---|---|
+| [#4](https://github.com/originallgb/veristat/issues/4) | Bazaar MCP indexing or narrow waiver | CDP confirmation or operator decision |
+| [#5](https://github.com/originallgb/veristat/issues/5) | Privacy/retention decision and implementation | Operator policy choices |
+| [#6](https://github.com/originallgb/veristat/issues/6) | 20–30-case quality corpus | Unblocked; live run optional |
+| [#7](https://github.com/originallgb/veristat/issues/7) | Safe Node buyer integration | Real-content path depends on #5 |
+| [#8](https://github.com/originallgb/veristat/issues/8) | Registry/distribution launch | #4, #5, #7 and Phase 3 gates |
+| [#9](https://github.com/originallgb/veristat/issues/9) | Operational visibility decision | Post-launch evidence |
+| [#10](https://github.com/originallgb/veristat/issues/10) | Verification product evolution | Day-30 demand gate |
+| [#11](https://github.com/originallgb/veristat/issues/11) | Pricing/access experiments | Observed conversion problem |
+
 ## Track 1 — Registry and public-contract readiness
 
 ### Objective
@@ -92,7 +109,7 @@ mcp-publisher publish
 - Authorize the actual registry publication. Passing validation is not that
   authorization.
 
-## Track 2 — Verification quality evaluation
+## Track 2 — Verification quality evaluation ([#6](https://github.com/originallgb/veristat/issues/6))
 
 ### Objective
 
@@ -149,7 +166,7 @@ npm test
 - Approve any production-derived case only after privacy policy, consent, and
   redaction requirements are settled.
 
-## Track 3 — Privacy and retention
+## Track 3 — Privacy and retention ([#5](https://github.com/originallgb/veristat/issues/5))
 
 The current D1 implementation stores complete submitted input fields, raw
 panel results, and the synthesized verdict with no automatic retention job.
@@ -166,7 +183,7 @@ test requirements are in
 - Implementation includes tested deletion, migration, rollback, and
   historical-data handling rather than only updated prose.
 
-## Track 4 — Buyer integration pack
+## Track 4 — Buyer integration pack ([#7](https://github.com/originallgb/veristat/issues/7))
 
 Build a copyable Node example that initializes the MCP session, lists tools,
 calls the free sample, verifies the unpaid 402, and optionally retries with a
@@ -180,7 +197,7 @@ in [`buyer-integration-pack.md`](buyer-integration-pack.md).
   uses a caller-supplied throwaway wallet, and enforces a payment cap.
 - A fresh-environment smoke proves the documented install and unpaid flow.
 
-## Track 5 — Launch-material preparation
+## Track 5 — Launch-material preparation ([#8](https://github.com/originallgb/veristat/issues/8))
 
 ### Objective
 
@@ -233,6 +250,65 @@ does not submit listings, open pull requests, post publicly, or contact people.
 - Approve the claims, tone, support path, and privacy disclosure.
 - Choose which channels launch first.
 - Authorize each submission, pull request, public post, or outreach batch.
+
+## Track 6 — Operational visibility decision ([#9](https://github.com/originallgb/veristat/issues/9))
+
+The existing `scripts/dashboard.mjs` and documented D1 queries are the MVP
+operations surface. Do not turn the brainstormed live-activity and admin views
+into two speculative UIs. First define the public-demo questions, operator
+actions, data classification, authentication, redaction, freshness, and cost.
+
+The run evidence is currently fragmented: local tests and smoke checks print
+to the terminal, GitHub Actions retains unstructured job logs without uploaded
+artifacts, fixture evaluation data is committed under `eval/`, live evaluation
+summaries are stdout-only, controlled paid rehearsals write sanitized evidence
+under `docs/session-logs/`, production requests and settlements live in D1,
+and raw Worker tails are intentionally transient. There is no unified run ID,
+run index, durable test-report archive, or cross-path trace store.
+
+Before implementing another operations surface:
+
+- Define a common run envelope covering run kind, environment, commit/Worker
+  version, start/end time, status, duration, checks or metrics, degradation,
+  and pointers to permitted evidence.
+- Map Vitest/typecheck, smoke/preflight, fixture/live evaluation, paid
+  rehearsal, Bazaar checks, and production requests onto that envelope.
+- Classify fields and define retention/deletion before selecting D1, GitHub
+  Actions artifacts, R2, tracked sanitized evidence, or terminal-only output.
+- Correlate run IDs with request IDs, transaction hashes, commits, deployments,
+  and CI runs without duplicating prompts, raw panel output, verdict bodies, or
+  payment material.
+- Keep production request retention governed by the privacy decision in
+  [#5](https://github.com/originallgb/veristat/issues/5); observability must not
+  become a second uncontrolled copy of sensitive data.
+- Preserve the invariant that failed observability writes cannot charge a
+  buyer or fail an otherwise successful request.
+
+### Exit criteria
+
+- Document the current storage matrix and one versioned run-envelope schema.
+- Make retention, redaction, correlation, and failure behavior testable.
+- Record that CLI plus structured run history is sufficient through the
+  experiment; or produce one bounded UI specification and a separately
+  estimated implementation issue, with sensitive fields prohibited by default.
+
+## Track 7 — Evidence-gated product and commercial discovery
+
+Two post-launch epics retain the longer-range ideas without mixing them into
+launch-critical implementation:
+
+- [#10](https://github.com/originallgb/veristat/issues/10) merges panel shapes,
+  domain modes, response variants, model behavior tracking, human review,
+  signed certificates, scenario building, and research fanout into one ranked
+  product-discovery decision. Resume after the day-30 demand gate.
+- [#11](https://github.com/originallgb/veristat/issues/11) merges payment
+  alternatives, trial/free quotas, and pricing experiments. Resume only when
+  usage or buyer feedback identifies a concrete conversion or payment-friction
+  problem.
+
+Each epic must produce at most one recommended implementation slice with
+explicit economics, privacy impact, public-contract changes, success measures,
+and rollback criteria. It may also conclude that no expansion is justified.
 
 ## Explicit deferrals
 

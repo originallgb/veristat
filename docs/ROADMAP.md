@@ -7,6 +7,24 @@ The one-line goal: **listed and selling in the Coinbase x402 Bazaar and the
 official MCP registry, with instrumentation that can answer the ship gate
 (10 organic paying wallets in 30 days — `docs/STRATEGY.md`).**
 
+## Execution issue map
+
+GitHub [issue #3](https://github.com/originallgb/veristat/issues/3) is the
+idea/backlog index. Delivery is sliced into the focused issues below; roadmap
+checkboxes remain the source of phase order and the issues hold implementation
+discussion and evidence.
+
+| Order | Issue | Outcome | Start condition |
+|---|---|---|---|
+| P0 | [#4](https://github.com/originallgb/veristat/issues/4) | Resolve Bazaar MCP indexing or record the narrow listing waiver | External confirmation or operator decision |
+| P0 | [#5](https://github.com/originallgb/veristat/issues/5) | Choose and implement privacy/retention | Operator chooses policy inputs |
+| P1 | [#6](https://github.com/originallgb/veristat/issues/6) | Expand evaluation to 20–30 deep cases | Unblocked now; live run remains optional |
+| P1 | [#7](https://github.com/originallgb/veristat/issues/7) | Ship the safe Node buyer integration pack | Implementation can start; real-content quickstart waits for #5 |
+| P1 | [#8](https://github.com/originallgb/veristat/issues/8) | Prepare and execute registry/distribution launch | Draft now; external actions wait for #4, #5, #7 and Phase 3 |
+| P2 | [#9](https://github.com/originallgb/veristat/issues/9) | Decide whether operations need more than the CLI dashboard | Post-launch operational evidence |
+| P2 | [#10](https://github.com/originallgb/veristat/issues/10) | Rank panel, response, trust, and research product expansions | Day-30 demand gate |
+| P2 | [#11](https://github.com/originallgb/veristat/issues/11) | Evaluate trial, pricing, and payment-model experiments | Observed conversion or payment-friction problem |
+
 ## How Bazaar listing actually works (read before Phase 2/3)
 
 There is **no registration form**. The CDP facilitator auto-catalogs an
@@ -94,7 +112,7 @@ x402.org remains fine for plain payment testing. Note the CDP catalog is
       tx `0x1a2cca2486…`). `EXTENSION-RESPONSES` shows
       `{"bazaar":{"status":"processing"}}` (accepted for asynchronous
       processing, not proof of listing).
-- [ ] Confirm listing via `scripts/check-bazaar.mjs` — the controlled final
+- [ ] Confirm listing via `scripts/check-bazaar.mjs` ([#4](https://github.com/originallgb/veristat/issues/4)) — the controlled final
       rehearsal remained NOT LISTED at baseline, +10, +30, and +60 minutes.
       Sanitized evidence was attached to x402-foundation/x402#2112 in
       [comment 4993727120](https://github.com/x402-foundation/x402/issues/2112#issuecomment-4993727120).
@@ -177,22 +195,25 @@ deferrals are in
 - [x] Quality-evaluation baseline: deterministic labelled fixtures, synthesis
       versus naive-majority metrics, and an opt-in no-x402 live runner
 - [ ] Expand the stable baseline to 20–30 deep, labelled verification cases
+      ([#6](https://github.com/originallgb/veristat/issues/6))
       across factual, code/review, migration, ambiguous, and adversarial work
 - [x] Document the current D1 storage truth and the bounded-retention,
       caller-control, and aggregate-only alternatives in
       [`docs/plans/privacy-and-retention.md`](plans/privacy-and-retention.md)
 - [ ] **USER**: choose the retention default/window, caller control,
       historical-row treatment, deletion promise, and production-data-use rule
+      ([#5](https://github.com/originallgb/veristat/issues/5))
 - [ ] Implement the selected policy, tested purge/deletion path, migration and
       fail-safe rollback, and accurate pre-submission buyer disclosure
 - [x] Specify the safe Node buyer path (initialize/list, free sample, unpaid
       402, optional Base Sepolia retry through the dedicated dispatcher) in
       [`docs/plans/buyer-integration-pack.md`](plans/buyer-integration-pack.md)
-- [ ] Implement and fresh-environment-test the buyer integration pack; the
+- [ ] Implement and fresh-environment-test the buyer integration pack
+      ([#7](https://github.com/originallgb/veristat/issues/7)); the
       default path must be unable to spend
 - [ ] Draft registry/directory copy, first-user harnesses, outreach text, and a
       launch checklist; do not submit, publish, post, or send without operator
-      approval
+      approval ([#8](https://github.com/originallgb/veristat/issues/8))
 - [ ] **USER**: approve the public claims, privacy disclosure, publication
       action, submissions, and outreach batches
 
@@ -235,6 +256,17 @@ this prelaunch track.
 
 ## Post-launch backlog
 
+- [ ] Decide whether the existing CLI/D1 dashboard is sufficient or a redacted
+      activity/admin surface is justified
+      ([#9](https://github.com/originallgb/veristat/issues/9)).
+- [ ] After the day-30 demand gate, rank additional panels, domain modes,
+      response modes, model tracking, human review, signed certificates,
+      scenario tooling, and `research_fanout`; implement only the strongest
+      evidence-backed slice
+      ([#10](https://github.com/originallgb/veristat/issues/10)).
+- [ ] Evaluate trial quotas, alternative payment rails/facilitators, and price
+      experiments only after observed acquisition or conversion friction
+      ([#11](https://github.com/originallgb/veristat/issues/11)).
 - [ ] Workers AI for eval graders / cheap tier / AI Gateway — feasibility in
       `docs/research/workers-ai-models.md`; do not touch the paid panel.
 - [ ] Coding-tool plugin distribution: Cloudflare's [pay-from-coding-tools](
