@@ -41,8 +41,18 @@ import {
   signQuote,
   verifyQuote,
   QUOTE_TTL_MS,
+  MAX_ENCODED_QUOTE_TOKEN_CHARS,
   type QuoteInput
 } from "./quoting";
+
+/** The v2 payload includes an EVM authorization plus discovery metadata and is
+ * normally well below this ceiling. Bound it before base64/JSON decoding so an
+ * unpaid caller cannot force unbounded allocation or parsing work. */
+export const MAX_ENCODED_PAYMENT_TOKEN_CHARS = 64 * 1024;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
 
 export interface PaymentGateConfig {
   network: string; // CAIP-2, e.g. "eip155:84532"
@@ -58,7 +68,8 @@ export interface PaymentGateConfig {
    * back to x402://<tool> when unset (payments work; discovery listing won't).
    */
   publicUrl?: string;
-  /** Fired after successful settlement — receipt logging (never blocks response). */
+  /** Fired after successful settlement. The hook is awaited, but its failure is
+   * isolated from the successful paid response. */
   onSettled?: (info: {
     tool: string;
     requestId: string;
@@ -220,24 +231,66 @@ export class PaymentGate {
 
         if (!token || typeof token !== "string") return paymentRequired();
 
+        if (token.length > MAX_ENCODED_PAYMENT_TOKEN_CHARS) {
+          return paymentRequired("PAYMENT_TOO_LARGE");
+        }
+
         let paymentPayload: PaymentPayload;
         try {
-          paymentPayload = JSON.parse(atob(token));
+          const decoded: unknown = JSON.parse(atob(token));
+          if (!isRecord(decoded)) return paymentRequired("INVALID_PAYMENT");
+          paymentPayload = decoded as unknown as PaymentPayload;
         } catch {
           return paymentRequired("INVALID_PAYMENT");
         }
 
-        // If the client echoes our quote token, enforce expiry + integrity.
-        // Either way the settled amount is pinned to `requirements`, which is
-        // recomputed deterministically from the same args.
-        const echoedQuote = extra?._meta?.["veristat/quote"] as string | undefined;
-        if (echoedQuote) {
-          const q = await verifyQuote(this.cfg.quoteSigningKey, echoedQuote, {
-            priceUSD,
-            requestHash
-          });
-          if (!q.ok) return paymentRequired(q.reason);
+        // Normal x402 v2 clients copy challenge extensions into the encoded
+        // PaymentPayload. Verify the quote from that authenticated retry shape,
+        // rather than relying on a separate MCP metadata field.
+        const payloadExtensions = isRecord(paymentPayload.extensions)
+          ? paymentPayload.extensions
+          : undefined;
+        const payloadQuoteExtension = payloadExtensions?.["veristat/quote"];
+        let echoedQuote: string | undefined;
+        if (payloadQuoteExtension !== undefined) {
+          if (!isRecord(payloadQuoteExtension)) {
+            return paymentRequired("MALFORMED_QUOTE");
+          }
+          if (typeof payloadQuoteExtension.token !== "string") {
+            return paymentRequired("MALFORMED_QUOTE");
+          }
+          echoedQuote = payloadQuoteExtension.token;
         }
+
+        // Compatibility for early clients that echoed the signed token beside
+        // x402/payment. Verify it identically, then normalize it into the
+        // payload before extension echo validation and facilitator calls.
+        if (!echoedQuote) {
+          const legacyQuote = extra?._meta?.["veristat/quote"];
+          if (legacyQuote !== undefined && typeof legacyQuote !== "string") {
+            return paymentRequired("MALFORMED_QUOTE");
+          }
+          echoedQuote = legacyQuote;
+          if (echoedQuote) {
+            paymentPayload.extensions = {
+              ...(payloadExtensions ?? {}),
+              "veristat/quote": {
+                token: echoedQuote,
+                priceUSD,
+                ttlMs: QUOTE_TTL_MS
+              }
+            };
+          }
+        }
+
+        if (!echoedQuote) return paymentRequired("QUOTE_REQUIRED");
+        if (echoedQuote.length > MAX_ENCODED_QUOTE_TOKEN_CHARS)
+          return paymentRequired("QUOTE_TOO_LARGE");
+        const q = await verifyQuote(this.cfg.quoteSigningKey, echoedQuote, {
+          priceUSD,
+          requestHash
+        });
+        if (!q.ok) return paymentRequired(q.reason);
 
         const matchingReq = this.resourceServer.findMatchingRequirements(
           requirements,
@@ -302,18 +355,19 @@ export class PaymentGate {
               discovery
             );
             if (s.success) {
+              const settledPayer = s.payer ?? payer;
               result._meta ??= {};
               result._meta["x402/payment-response"] = {
                 success: true,
                 transaction: s.transaction,
                 network: s.network,
-                payer: s.payer
+                payer: settledPayer
               };
               result._meta["veristat/settlement"] = {
                 requestId,
                 priceUSD,
                 transaction: s.transaction,
-                payer: s.payer
+                payer: settledPayer
               };
               try {
                 await this.cfg.onSettled?.({
@@ -321,7 +375,7 @@ export class PaymentGate {
                   requestId,
                   priceUSD,
                   transaction: s.transaction,
-                  payer: s.payer,
+                  payer: settledPayer,
                   network: this.cfg.network
                 });
               } catch (e) {

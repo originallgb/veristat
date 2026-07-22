@@ -14,6 +14,7 @@ export class MockFacilitator implements FacilitatorClient {
   settleCalls: { payload: PaymentPayload; requirements: PaymentRequirements }[] = [];
   failVerify = false;
   failSettle = false;
+  omitPayerOnSettle = false;
   /** EIP-3009 nonces already settled on the mock "chain" — replayed
    *  authorizations fail verify, as they would against a real facilitator. */
   private settledNonces = new Set<string>();
@@ -55,10 +56,14 @@ export class MockFacilitator implements FacilitatorClient {
       };
     }
     this.settledNonces.add(this.nonceOf(payload));
-    return {
+    const result = {
       success: true,
       transaction: `0xmock${this.settleCalls.length.toString(16).padStart(8, "0")}`,
-      network: this.network as never,
+      network: this.network as never
+    };
+    if (this.omitPayerOnSettle) return result;
+    return {
+      ...result,
       payer: (payload.payload as { authorization?: { from?: string } })
         ?.authorization?.from
     };

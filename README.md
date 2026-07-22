@@ -61,8 +61,14 @@ operator explicitly records the narrow listing waiver in `docs/ROADMAP.md`.
   `panel_degraded: true` + refund note (automatic refunds remain post-launch).
 - **Synthesis**: one schema-enforced model call; prompts versioned in
   `src/prompts/`, version logged per request.
-- **Logging**: D1 — `settlements` (tx hash, payer, amount = demand proof) and
-  `requests` (request/response pairs minus payer identity = eval flywheel).
+- **Data handling and logging**: each submission is sent to Anthropic, OpenAI,
+  and Google for the panel; the content and panel outputs are then sent to
+  Anthropic for synthesis. D1 currently stores the full submitted content,
+  context, and question, raw panel outputs, and full verdict in `requests`
+  without automatic expiry. `settlements` separately stores transaction hash,
+  payer wallet, and amount, but the shared `request_id` makes the records
+  joinable. Retention and buyer-control policy is intentionally unresolved; see
+  `docs/plans/privacy-and-retention.md` before submitting sensitive material.
 
 ## Deployment configuration
 
@@ -88,7 +94,8 @@ npm run dev                               # http://localhost:8787 (/mcp, /health
 node scripts/smoke.mjs                    # free tool + unpaid 402 challenge (no keys needed)
 E2E_UNPAID_ONLY=1 node scripts/e2e.mjs    # full unpaid matrix, exits nonzero on failure
 node scripts/make-test-wallet.mjs         # buyer key → .wallets/, prints Circle faucet link
-BUYER_PRIVATE_KEY=$(cat .wallets/buyer.key) node scripts/e2e.mjs   # paid e2e (needs panel keys too)
+# after securely exporting BUYER_PRIVATE_KEY from the generated file:
+ENABLE_PAID_CALL=1 NETWORK=eip155:84532 node scripts/e2e.mjs  # approved $0.50 paid e2e
 ```
 
 Full testing strategy (wallet roles, negative-path matrix, Bazaar listing
