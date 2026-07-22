@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { VeristatMCP } from "./mcp/server";
-import { computePriceUSD } from "./payments/quoting";
-import { METHODOLOGY, priceCard } from "./mcp/sample_verdict";
+import { METHODOLOGY, priceCard, pricePreview } from "./mcp/sample_verdict";
+import { healthPayload } from "./health";
 
 export { VeristatMCP };
 
@@ -19,16 +19,12 @@ app.get("/", (c) =>
   })
 );
 
-app.get("/health", (c) => c.json({ ok: true }));
+app.get("/health", (c) => c.json(healthPayload(c.env)));
 
 // Human/agent-readable quote preview (the authoritative quote is in the 402)
 app.get("/price", (c) => {
   const chars = Number(c.req.query("chars") ?? 1000);
-  return c.json({
-    panel_3_usd: computePriceUSD({ panelSize: 3, contentChars: chars }),
-    panel_5_usd: computePriceUSD({ panelSize: 5, contentChars: chars }),
-    note: "MVP routes all requests to a 3-model panel."
-  });
+  return c.json(pricePreview(chars));
 });
 
 export default {

@@ -20,7 +20,12 @@ export const consensusCheckInput = {
     .describe(
       "Optional focusing question, e.g. 'Is this migration plan safe?' Defaults to general verification."
     ),
-  panel_size: z.union([z.literal(3), z.literal(5)]).default(3),
+  panel_size: z
+    .union([z.literal(3), z.literal(5)])
+    .default(3)
+    .describe(
+      "Accepted values: 3 or 5. The current MVP fulfills and quotes either choice as a 3-panel check."
+    ),
   mode: z
     .enum(["verify", "adversarial"])
     .default("verify")

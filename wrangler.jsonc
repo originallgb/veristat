@@ -8,6 +8,7 @@
   // require the paid plan. subrequests capped as a runaway guard.
   "limits": { "cpu_ms": 30000 },
   "observability": { "enabled": true },
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
   "durable_objects": {
     "bindings": [{ "class_name": "VeristatMCP", "name": "VeristatMCP" }]
   },
@@ -26,7 +27,7 @@
     // Bazaar listing rehearsal + mainnet: https://api.cdp.coinbase.com/platform/v2/x402
     // (requires CDP_API_KEY_ID / CDP_API_KEY_SECRET secrets — docs/ROADMAP.md Phase 2).
     // Later: Cloudflare Monetization Gateway.
-    "FACILITATOR_URL": "https://x402.org/facilitator",
+    "FACILITATOR_URL": "https://api.cdp.coinbase.com/platform/v2/x402",
     // Testnet receiver (.wallets/payto.key throwaway). Mainnet cutover: replace
     // with the operator's real Base USDC address (docs/ROADMAP.md Phase 3).
     "PAY_TO_ADDRESS": "0x86CdAe1A22458442BaB9E10216a7E96b606d3635",

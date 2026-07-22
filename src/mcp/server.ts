@@ -16,15 +16,19 @@ import { synthesize, SYNTHESIS_PROMPT_VERSION } from "../panel/synthesis";
 import { buildPanelPrompt, PANEL_PROMPT_VERSION } from "../prompts/panel_v1";
 import { computePriceUSD } from "../payments/quoting";
 import { logRequest, logSettlement } from "../logging";
+import { VERSION } from "../version";
 
 const CONSENSUS_DESCRIPTION =
   "Independent multi-model verification of a claim, answer, plan, or code change. " +
-  "Fans your input to 3-5 heterogeneous frontier models (cross-vendor), returns a structured verdict: " +
+  "The current MVP fans your input to 3 heterogeneous frontier models (cross-vendor) and returns a structured verdict: " +
   "consensus level, points of agreement, contradictions with reasoning, and dissenting positions. " +
+  "panel_size 5 remains accepted for compatibility but is fulfilled and quoted as a 3-panel check. " +
+  "Privacy: submitted content, context, and question are sent to Anthropic, OpenAI, and Google for the panel; content and panel outputs are then sent to Anthropic for synthesis. " +
+  "The current service stores the full submission, raw panel outputs, and verdict in D1 without automatic expiry, and the request_id can link that row to the payer wallet stored with its settlement. " +
   "Use before high-stakes actions. Paid via x402.";
 
 export class VeristatMCP extends McpAgent<Env> {
-  server = new McpServer({ name: "veristat", version: "0.1.0" });
+  server = new McpServer({ name: "veristat", version: VERSION });
 
   async init() {
     const env = this.env;
@@ -154,6 +158,7 @@ export class VeristatMCP extends McpAgent<Env> {
             text: JSON.stringify(
               {
                 sample_verdict: SAMPLE_VERDICT,
+                service_version: VERSION,
                 methodology: METHODOLOGY,
                 price_card: priceCard(this.env.NETWORK),
                 example_price_panel3_small_input: `$${computePriceUSD({ panelSize: 3, contentChars: 1000 })}`

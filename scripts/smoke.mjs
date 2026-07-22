@@ -5,6 +5,23 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { mcpFetch } from "./mcp-fetch.mjs";
 
 const BASE = process.env.VERISTAT_URL ?? "http://localhost:8787/mcp";
+const EXPECTED_VERSION = process.env.EXPECTED_VERSION;
+
+const healthUrl = new URL(BASE);
+healthUrl.pathname = "/health";
+healthUrl.search = "";
+const healthRes = await mcpFetch(healthUrl);
+if (!healthRes.ok) {
+  throw new Error(`health check failed: ${healthRes.status} ${healthRes.statusText}`);
+}
+const health = await healthRes.json();
+if (!health.ok || typeof health.version !== "string") {
+  throw new Error(`health response has no deployment identity: ${JSON.stringify(health)}`);
+}
+if (EXPECTED_VERSION && health.version !== EXPECTED_VERSION) {
+  throw new Error(`deployment version mismatch: expected ${EXPECTED_VERSION}, got ${health.version}`);
+}
+console.log(`HEALTH: ${health.ok} | version: ${health.version} | network: ${health.network}`);
 
 const client = new Client({ name: "smoke", version: "0.0.0" });
 await client.connect(

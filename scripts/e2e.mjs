@@ -2,13 +2,15 @@
 // Exercises the same withX402Client real agent buyers use, so a pass is also
 // a wire-format compliance check. Exits nonzero on any failure.
 //
-//   VERISTAT_URL=http://localhost:8787/mcp \
-//   BUYER_PRIVATE_KEY=$(cat .wallets/buyer.key) node scripts/e2e.mjs
+//   VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
+//   ENABLE_PAID_CALL=1 NETWORK=eip155:84532 \
+//   BUYER_PRIVATE_KEY=<securely-exported-test-key> node scripts/e2e.mjs
 //
 // Env:
 //   VERISTAT_URL       target /mcp endpoint (default http://localhost:8787/mcp)
 //   BUYER_PRIVATE_KEY  funded base-sepolia buyer key (scripts/make-test-wallet.mjs)
-//   NETWORK            CAIP-2, default eip155:84532
+//   ENABLE_PAID_CALL   must equal 1 before the wallet is read or a connection opens
+//   NETWORK            paid mode is hard-locked to eip155:84532
 //   E2E_UNPAID_ONLY=1  run only the free/402-shape checks (no wallet needed)
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
@@ -16,11 +18,34 @@ import { withX402Client } from "agents/x402";
 import { toClientEvmSigner } from "@x402/evm";
 import { privateKeyToAccount } from "viem/accounts";
 import { mcpFetch } from "./mcp-fetch.mjs";
+import {
+  BASE_SEPOLIA_NETWORK,
+  SMALL_CALL_ATOMIC_AMOUNT,
+  assertSafePaymentChallenge,
+  assertSafePaymentRequirements,
+  expectedSmallTestnetChallenge,
+  guardClientPaymentChallenges,
+  readPaidOperatorConfig
+} from "./paid-operator-guard.mjs";
 
 const BASE = process.env.VERISTAT_URL ?? "http://localhost:8787/mcp";
-const NETWORK = process.env.NETWORK ?? "eip155:84532";
 const UNPAID_ONLY = process.env.E2E_UNPAID_ONLY === "1";
-const PK = process.env.BUYER_PRIVATE_KEY;
+let paidConfig;
+if (!UNPAID_ONLY) {
+  try {
+    // This guard runs before BUYER_PRIVATE_KEY is read, before the MCP
+    // connection opens, and before any signer can be constructed.
+    paidConfig = readPaidOperatorConfig(process.env);
+  } catch (error) {
+    console.error(`PAID E2E REFUSED: ${error instanceof Error ? error.message : "guard failed"}`);
+    process.exit(1);
+  }
+}
+const NETWORK = paidConfig?.network ?? process.env.NETWORK ?? BASE_SEPOLIA_NETWORK;
+const PK = paidConfig?.privateKey;
+const expectedPaidChallenge = paidConfig
+  ? expectedSmallTestnetChallenge(BASE)
+  : undefined;
 
 let failures = 0;
 const check = (name, cond, detail = "") => {
@@ -62,9 +87,30 @@ const req0 = err?.accepts?.[0];
 check("402 quotes $0.50 (3-panel, small input)", req0?.amount === "500000", String(req0?.amount));
 check("402 network matches", req0?.network === NETWORK, String(req0?.network));
 check("402 scheme is exact", req0?.scheme === "exact", String(req0?.scheme));
+check("402 resource is the exact target endpoint", err?.resource?.url === BASE,
+  String(err?.resource?.url));
+const bazaar = err?.extensions?.bazaar;
+check("402 carries MCP Bazaar discovery metadata",
+  bazaar?.info?.input?.type === "mcp" &&
+  bazaar?.info?.input?.toolName === "consensus_check" &&
+  bazaar?.info?.input?.transport === "streamable-http" &&
+  bazaar?.info?.output?.type === "json");
 check("402 carries signed quote extension",
   typeof err?.extensions?.["veristat/quote"]?.token === "string" &&
   err?.extensions?.["veristat/quote"]?.priceUSD === 0.5);
+
+if (expectedPaidChallenge) {
+  try {
+    assertSafePaymentChallenge(err, expectedPaidChallenge);
+    check("paid challenge matches the locked Base Sepolia spend target", true);
+  } catch (error) {
+    check(
+      "paid challenge matches the locked Base Sepolia spend target",
+      false,
+      error instanceof Error ? error.message : "guard failed"
+    );
+  }
+}
 
 // 4. stub stays stubbed
 const stub = await client.callTool({ name: "research_fanout", arguments: { brief: "x" } });
@@ -79,12 +125,18 @@ if (UNPAID_ONLY) {
   console.log(`\n${failures === 0 ? "E2E (unpaid-only) OK" : `E2E FAILED: ${failures} check(s)`}`);
   process.exit(failures === 0 ? 0 : 1);
 }
-if (!PK) {
-  console.error("\nBUYER_PRIVATE_KEY not set — run scripts/make-test-wallet.mjs, fund it, retry (or E2E_UNPAID_ONLY=1).");
+if (!PK || !expectedPaidChallenge || failures > 0) {
+  await client.close();
+  console.error(
+    failures > 0
+      ? `\nPAID E2E REFUSED: ${failures} pre-payment check(s) failed.`
+      : "\nPAID E2E REFUSED: operator guard was not established."
+  );
   process.exit(1);
 }
 
 // 5. client-side price cap refuses to overpay (no charge)
+guardClientPaymentChallenges(client, expectedPaidChallenge);
 const capped = withX402Client(client, {
   network: NETWORK,
   account: toClientEvmSigner(privateKeyToAccount(PK)),
@@ -92,7 +144,14 @@ const capped = withX402Client(client, {
 });
 let cappedRejected = false;
 try {
-  const r = await capped.callTool(async () => true, {
+  const r = await capped.callTool(async (reqs) => {
+    try {
+      assertSafePaymentRequirements(reqs, expectedPaidChallenge);
+      return true;
+    } catch {
+      return false;
+    }
+  }, {
     name: "consensus_check",
     arguments: { content: CONTENT }
   });
@@ -110,15 +169,26 @@ const client2 = new Client({ name: "e2e-paying", version: "0.0.0" });
 await client2.connect(
   new StreamableHTTPClientTransport(new URL(BASE), { fetch: mcpFetch })
 );
+guardClientPaymentChallenges(client2, expectedPaidChallenge);
 const paying = withX402Client(client2, {
   network: NETWORK,
   account: toClientEvmSigner(privateKeyToAccount(PK)),
-  maxPaymentValue: BigInt(3_000_000) // $3 cap
+  maxPaymentValue: BigInt(SMALL_CALL_ATOMIC_AMOUNT) // exact $0.50 synthetic-call cap
 });
 const paid = await paying.callTool(
   async (reqs) => {
-    console.log(`      paying ${Number(reqs[0].amount) / 1e6} USDC on ${reqs[0].network}`);
-    return true;
+    try {
+      const requirement = assertSafePaymentRequirements(reqs, expectedPaidChallenge);
+      console.log(
+        `      paying ${Number(requirement.amount) / 1e6} USDC on ${requirement.network}`
+      );
+      return true;
+    } catch (error) {
+      console.error(
+        `      payment refused: ${error instanceof Error ? error.message : "guard failed"}`
+      );
+      return false;
+    }
   },
   { name: "consensus_check", arguments: { content: CONTENT } }
 );
