@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { z } from "zod";
 import { verdictSchema, type Verdict } from "../src/mcp/schemas";
 import { buildPanel } from "../src/panel/providers";
 import { runPanel } from "../src/panel/orchestrator";
@@ -48,10 +49,54 @@ export interface EvaluationBaseline {
   requiredFindingRecall: number;
 }
 
-interface FixtureFile {
-  baseline: EvaluationBaseline;
-  results: EvaluationResult[];
-}
+const verdictLabelSchema = z.enum(["supported", "contested", "refuted", "insufficient"]);
+
+export const evaluationCaseSchema = z
+  .object({
+    id: z.string().min(1),
+    category: z.enum([
+      "factual_claim",
+      "code_review",
+      "migration_safety",
+      "ambiguous_evidence",
+      "adversarial_claim"
+    ]),
+    content: z.string().min(1),
+    context: z.string().min(1).optional(),
+    question: z.string().min(1).optional(),
+    expectedVerdict: verdictLabelSchema,
+    requiredFindings: z.array(z.string().min(1))
+  })
+  .strict();
+
+// Keep `verdict` unparsed here so fixture scoring can count schema failures
+// and fail the regression gate with that explicit diagnostic.
+export const evaluationResultSchema = z
+  .object({
+    caseId: z.string().min(1),
+    verdict: z.unknown(),
+    panelOutputs: z.array(z.string()).min(1),
+    degraded: z.boolean(),
+    latencyMs: z.number().finite().nonnegative().optional()
+  })
+  .strict();
+
+export const evaluationBaselineSchema = z
+  .object({
+    synthesisAccuracy: z.number().finite().min(0).max(1),
+    naiveMajorityAccuracy: z.number().finite().min(0).max(1),
+    requiredFindingRecall: z.number().finite().min(0).max(1)
+  })
+  .strict();
+
+export const fixtureFileSchema = z
+  .object({
+    baseline: evaluationBaselineSchema,
+    results: z.array(evaluationResultSchema).min(1)
+  })
+  .strict();
+
+type FixtureFile = z.infer<typeof fixtureFileSchema>;
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const CASES_PATH = resolve(SCRIPT_DIR, "../eval/cases.json");
@@ -65,6 +110,29 @@ function assertUniqueIds(items: { id: string }[], label: string): void {
     }
     seen.add(item.id);
   }
+}
+
+function parseOrThrow<T>(schema: z.ZodType<T>, value: unknown, label: string): T {
+  const parsed = schema.safeParse(value);
+  if (!parsed.success) {
+    const details = parsed.error.issues
+      .map((issue) => `${issue.path.join(".") || "root"}: ${issue.message}`)
+      .join("; ");
+    throw new Error(`Malformed ${label}: ${details}`);
+  }
+  return parsed.data;
+}
+
+function parseCases(value: unknown): EvaluationCase[] {
+  return parseOrThrow(z.array(evaluationCaseSchema).min(1), value, "evaluation case file");
+}
+
+function parseResults(value: unknown): EvaluationResult[] {
+  return parseOrThrow(z.array(evaluationResultSchema), value, "result") as EvaluationResult[];
+}
+
+export function parseFixtureFile(value: unknown): FixtureFile {
+  return parseOrThrow(fixtureFileSchema, value, "fixture file");
 }
 
 function naiveMajority(panelOutputs: string[]): VerdictLabel {
@@ -100,34 +168,23 @@ function searchableVerdict(verdict: Verdict): string {
 }
 
 export function scoreEvaluation(
-  cases: EvaluationCase[],
-  results: EvaluationResult[]
+  cases: unknown,
+  results: unknown
 ): EvaluationSummary {
-  for (const result of results) {
-    if (
-      typeof result?.caseId !== "string" ||
-      result.caseId.length === 0 ||
-      !Array.isArray(result.panelOutputs) ||
-      result.panelOutputs.length === 0 ||
-      result.panelOutputs.some((output) => typeof output !== "string") ||
-      typeof result.degraded !== "boolean" ||
-      (result.latencyMs !== undefined && typeof result.latencyMs !== "number")
-    ) {
-      throw new Error("Malformed result: invalid caseId, panelOutputs, degraded, or latencyMs");
-    }
-  }
-  assertUniqueIds(cases, "case");
+  const validatedCases = parseCases(cases);
+  const validatedResults = parseResults(results);
+  assertUniqueIds(validatedCases, "case");
   assertUniqueIds(
-    results.map((result) => ({ id: result.caseId })),
+    validatedResults.map((result) => ({ id: result.caseId })),
     "result case"
   );
 
-  const caseIds = new Set(cases.map((item) => item.id));
-  const byCase = new Map(results.map((result) => [result.caseId, result]));
-  for (const item of cases) {
+  const caseIds = new Set(validatedCases.map((item) => item.id));
+  const byCase = new Map(validatedResults.map((result) => [result.caseId, result]));
+  for (const item of validatedCases) {
     if (!byCase.has(item.id)) throw new Error(`Missing result for case: ${item.id}`);
   }
-  for (const result of results) {
+  for (const result of validatedResults) {
     if (!caseIds.has(result.caseId)) throw new Error(`Result has unknown case id: ${result.caseId}`);
   }
 
@@ -139,7 +196,7 @@ export function scoreEvaluation(
   let degraded = 0;
   const latencies: number[] = [];
 
-  for (const item of cases) {
+  for (const item of validatedCases) {
     const result = byCase.get(item.id)!;
     const parsed = verdictSchema.safeParse(result.verdict);
     if (!parsed.success) {
@@ -162,8 +219,7 @@ export function scoreEvaluation(
     }
   }
 
-  const total = cases.length;
-  if (total === 0) throw new Error("Evaluation corpus is empty");
+  const total = validatedCases.length;
   const summary: EvaluationSummary = {
     total,
     synthesisAccuracy: synthesisCorrect / total,
@@ -178,19 +234,16 @@ export function scoreEvaluation(
   return summary;
 }
 
-async function readJson<T>(path: string): Promise<T> {
-  return JSON.parse(await readFile(path, "utf8")) as T;
+async function readJson(path: string): Promise<unknown> {
+  return JSON.parse(await readFile(path, "utf8")) as unknown;
 }
 
 export async function evaluateFixture(): Promise<{
   summary: EvaluationSummary;
   baseline: EvaluationBaseline;
 }> {
-  const cases = await readJson<EvaluationCase[]>(CASES_PATH);
-  const fixture = await readJson<FixtureFile>(FIXTURE_RESULTS_PATH);
-  if (!fixture.baseline || !Array.isArray(fixture.results)) {
-    throw new Error("Malformed fixture file");
-  }
+  const cases = parseCases(await readJson(CASES_PATH));
+  const fixture = parseFixtureFile(await readJson(FIXTURE_RESULTS_PATH));
   return { summary: scoreEvaluation(cases, fixture.results), baseline: fixture.baseline };
 }
 
@@ -233,7 +286,7 @@ function requiredEnvironment(): Env {
 
 async function runLive(): Promise<EvaluationSummary> {
   const env = requiredEnvironment();
-  const cases = await readJson<EvaluationCase[]>(CASES_PATH);
+  const cases = parseCases(await readJson(CASES_PATH));
   const results: EvaluationResult[] = [];
 
   for (const item of cases) {
