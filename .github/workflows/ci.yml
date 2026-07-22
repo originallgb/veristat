@@ -5,6 +5,12 @@ on:
     branches: ["**"]
   pull_request:
   workflow_dispatch:
+    inputs:
+      run_paid_testnet_e2e:
+        description: "Spend exactly $0.50 testnet USDC on the locked Base Sepolia rehearsal"
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   test:
@@ -22,7 +28,8 @@ jobs:
   # Live paid e2e against the deployed testnet worker. Manual because it
   # spends faucet USDC and real model tokens (docs/TESTING.md).
   testnet-e2e:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && inputs.run_paid_testnet_e2e == true
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,4 +41,6 @@ jobs:
       - run: node scripts/e2e.mjs
         env:
           VERISTAT_URL: ${{ vars.TESTNET_VERISTAT_URL }}
+          ENABLE_PAID_CALL: "1"
+          NETWORK: eip155:84532
           BUYER_PRIVATE_KEY: ${{ secrets.TESTNET_BUYER_PRIVATE_KEY }}

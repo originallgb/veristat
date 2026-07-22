@@ -3,10 +3,12 @@
 // Requires (see README "What you must supply"):
 //   BUYER_PRIVATE_KEY  — a testnet wallet key holding base-sepolia USDC
 //                        (faucet: https://faucet.circle.com). NOT the deployer's.
+//   ENABLE_PAID_CALL   — must equal 1; checked before the wallet is read
 //   VERISTAT_URL       — optional, defaults to http://localhost:8787/mcp
 //   EVIDENCE_FILE      — optional path for a sanitized JSON rehearsal record
 //
-// Usage: BUYER_PRIVATE_KEY=0x... node scripts/paid-call.mjs "claim to verify"
+// Usage (with BUYER_PRIVATE_KEY already securely exported):
+//   ENABLE_PAID_CALL=1 NETWORK=eip155:84532 node scripts/paid-call.mjs "claim to verify"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { withX402Client } from "agents/x402";
@@ -15,19 +17,33 @@ import { privateKeyToAccount } from "viem/accounts";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { mcpFetch } from "./mcp-fetch.mjs";
+import {
+  SMALL_CALL_ATOMIC_AMOUNT,
+  assertSafePaymentChallenge,
+  assertSafePaymentRequirements,
+  expectedSmallTestnetChallenge,
+  guardClientPaymentChallenges,
+  readPaidOperatorConfig
+} from "./paid-operator-guard.mjs";
 
-const pk = process.env.BUYER_PRIVATE_KEY;
-if (!pk) {
-  console.error("Set BUYER_PRIVATE_KEY to a funded base-sepolia test wallet key.");
+let paidConfig;
+try {
+  // This guard runs before BUYER_PRIVATE_KEY is read, before the MCP
+  // connection opens, and before any signer can be constructed.
+  paidConfig = readPaidOperatorConfig(process.env);
+} catch (error) {
+  console.error(`PAID CALL REFUSED: ${error instanceof Error ? error.message : "guard failed"}`);
   process.exit(1);
 }
+const pk = paidConfig.privateKey;
 const content =
   process.argv[2] ??
   "Renaming a table in PostgreSQL with ALTER TABLE ... RENAME TO is instantaneous and does not rewrite the table.";
 
 const BASE = process.env.VERISTAT_URL ?? "http://localhost:8787/mcp";
-const NETWORK = process.env.NETWORK ?? "eip155:84532";
+const NETWORK = paidConfig.network;
 const EVIDENCE_FILE = process.env.EVIDENCE_FILE;
+const expectedPaidChallenge = expectedSmallTestnetChallenge(BASE);
 const client = new Client({ name: "paid-caller", version: "0.0.0" });
 await client.connect(
   new StreamableHTTPClientTransport(new URL(BASE), { fetch: mcpFetch })
@@ -41,31 +57,53 @@ const unpaid = await client.callTool({
   arguments: { content }
 });
 const challenge = unpaid._meta?.["x402/error"];
-const acceptance = challenge?.accepts?.[0];
-const bazaarInput = challenge?.extensions?.bazaar?.info?.input;
-const bazaarOutput = challenge?.extensions?.bazaar?.info?.output;
-if (!unpaid.isError || challenge?.error !== "PAYMENT_REQUIRED") {
-  console.error("FAILED: deployed endpoint did not return an x402 payment challenge");
+let acceptance;
+try {
+  if (unpaid.isError !== true) {
+    throw new Error("Endpoint returned payment metadata without an MCP error result.");
+  }
+  acceptance = assertSafePaymentChallenge(challenge, expectedPaidChallenge);
+} catch (error) {
+  await client.close().catch(() => {});
+  console.error(
+    `PAID CALL REFUSED: ${error instanceof Error ? error.message : "challenge guard failed"}`
+  );
   process.exit(1);
 }
+const bazaarInput = challenge?.extensions?.bazaar?.info?.input;
+const bazaarOutput = challenge?.extensions?.bazaar?.info?.output;
 
+// withX402Client performs its own unpaid call. Guard that exact challenge—not
+// only the diagnostic challenge above—before its confirmation callback can
+// construct or sign a payment payload.
+guardClientPaymentChallenges(client, expectedPaidChallenge);
 const paying = withX402Client(client, {
   network: NETWORK,
   account: toClientEvmSigner(privateKeyToAccount(pk)),
-  maxPaymentValue: BigInt(3_000_000) // $3 cap
+  maxPaymentValue: BigInt(SMALL_CALL_ATOMIC_AMOUNT) // exact $0.50 synthetic-call cap
 });
 
 console.log(`Calling consensus_check (will pay if challenged)...`);
 const res = await paying.callTool(
   async (reqs) => {
-    const r = reqs[0];
-    console.log(`402 received — paying ${Number(r.amount) / 1e6} USDC on ${r.network} to ${r.payTo}`);
-    return true;
+    try {
+      const requirement = assertSafePaymentRequirements(reqs, expectedPaidChallenge);
+      console.log(
+        `402 received — paying ${Number(requirement.amount) / 1e6} USDC on ${requirement.network} to ${requirement.payTo}`
+      );
+      return true;
+    } catch (error) {
+      console.error(
+        `Payment refused: ${error instanceof Error ? error.message : "guard failed"}`
+      );
+      return false;
+    }
   },
   { name: "consensus_check", arguments: { content } }
 );
 
 if (res.isError) {
+  await client.close().catch(() => {});
   console.error("FAILED:", res.content?.[0]?.text?.slice(0, 2000));
   process.exit(1);
 }

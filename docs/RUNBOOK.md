@@ -107,6 +107,7 @@ but nonterminal and does not prove indexing. An absent header is inconclusive.
 ```sh
 VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
 NETWORK=eip155:84532 \
+ENABLE_PAID_CALL=1 \
 EVIDENCE_FILE=docs/session-logs/<timestamp>-bazaar-rehearsal.json \
   node scripts/paid-call.mjs "Controlled Bazaar discovery rehearsal"
 ```
@@ -199,14 +200,14 @@ below; CI only gates and (optionally) smoke-tests against a live URL.
 | Job | Trigger | What it runs | Secrets/vars |
 |---|---|---|---|
 | `test` | every push + PR | `npm run typecheck` + `npm test` (full 402→verify→settle cycle vs `test/mock_facilitator.ts`) | none — no real money, no vendor keys |
-| `testnet-e2e` | manual `workflow_dispatch` only | `node scripts/e2e.mjs` against the deployed testnet worker | repo var `TESTNET_VERISTAT_URL`, repo secret `TESTNET_BUYER_PRIVATE_KEY` (throwaway testnet key); panel API keys already live in the Worker |
+| `testnet-e2e` | manual `workflow_dispatch` with `run_paid_testnet_e2e=true` | `ENABLE_PAID_CALL=1 NETWORK=eip155:84532 node scripts/e2e.mjs` against the deployed testnet worker | repo var `TESTNET_VERISTAT_URL`, repo secret `TESTNET_BUYER_PRIVATE_KEY` (throwaway testnet key); panel API keys already live in the Worker |
 
 Kept manual on purpose: `testnet-e2e` spends faucet USDC and makes real
 model calls, so it's unsuitable to run on every push (`docs/TESTING.md`).
-Dispatch it from the Actions tab (or `gh workflow run ci.yml
--f testnet-e2e=true` — check the workflow's `workflow_dispatch` inputs)
-before a deploy, or after any change under `src/payments/`, `src/mcp/`, or
-`scripts/`.
+Dispatch it from the Actions tab with the paid checkbox selected, or run
+`gh workflow run ci.yml -f run_paid_testnet_e2e=true`. A default manual
+dispatch runs only the credential-free test job. Run the paid job before a
+deploy, or after any change under `src/payments/`, `src/mcp/`, or `scripts/`.
 
 Before adding an auto-deploy job: it would need `CLOUDFLARE_API_TOKEN` (or
 OIDC) as a repo secret, and should never target mainnet without the Phase 3
