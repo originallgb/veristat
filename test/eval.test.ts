@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   evaluateFixture,
+  parseFixtureFile,
   scoreEvaluation,
   type EvaluationCase,
   type EvaluationResult
@@ -139,12 +140,44 @@ describe("quality evaluation", () => {
     expect(() => scoreEvaluation([sample], [result])).toThrow(/malformed result/i);
   });
 
+  it("rejects malformed case fields and fixture baselines at runtime", () => {
+    const malformedCase = {
+      id: "invalid-case",
+      category: "not-a-category",
+      content: 42,
+      expectedVerdict: "supported",
+      requiredFindings: []
+    };
+    const result: EvaluationResult = {
+      caseId: "invalid-case",
+      verdict: verdict("supported", "Safe."),
+      panelOutputs: ["ASSESSMENT: SUPPORTED"],
+      degraded: false
+    };
+
+    expect(() => scoreEvaluation([malformedCase], [result])).toThrow(/malformed evaluation case/i);
+    expect(() => scoreEvaluation([{ ...malformedCase, category: "factual_claim", content: "Claim" }], [
+      { ...result, unexpected: true }
+    ])).toThrow(/malformed result/i);
+    expect(() =>
+      parseFixtureFile({
+        baseline: {
+          synthesisAccuracy: 1,
+          naiveMajorityAccuracy: 0.5,
+          requiredFindingRecall: 1,
+          unexpected: true
+        },
+        results: [result]
+      })
+    ).toThrow(/malformed fixture file/i);
+  });
+
   it("ships a public corpus covering every verdict and required category", async () => {
     const cases = JSON.parse(
       await readFile(`${ROOT}/eval/cases.json`, "utf8")
     ) as EvaluationCase[];
 
-    expect(cases.length).toBeGreaterThanOrEqual(12);
+    expect(cases.length).toBeGreaterThanOrEqual(20);
     expect(new Set(cases.map((item) => item.expectedVerdict))).toEqual(
       new Set(["supported", "contested", "refuted", "insufficient"])
     );
@@ -188,11 +221,15 @@ describe("quality evaluation", () => {
       delete env[name];
     }
 
-    const run = spawnSync("npm", ["run", "eval:live"], {
-      cwd: ROOT,
-      env,
-      encoding: "utf8"
-    });
+    const run = spawnSync(
+      process.execPath,
+      [resolve(ROOT, "node_modules/tsx/dist/cli.mjs"), resolve(ROOT, "scripts/eval.ts"), "live"],
+      {
+        cwd: ROOT,
+        env,
+        encoding: "utf8"
+      }
+    );
 
     expect(run.status).toBe(1);
     expect(run.stderr).toContain("Live evaluation requires exported environment variables");

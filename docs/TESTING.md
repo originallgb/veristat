@@ -26,8 +26,8 @@ payment invariants; the panel is second.
 | Unit: quoting, schemas, synthesis parsing | vitest | none | none | every commit (CI) |
 | Integration: full 402→verify→settle cycle + negative paths | vitest | `test/mock_facilitator.ts` | none | every commit (CI) |
 | Deployed Bazaar preflight | `scripts/bazaar-preflight.mjs` | none (unpaid MCP call) | none | before any paid rehearsal/canary |
-| Testnet e2e: real settlement over streamable HTTP | `scripts/e2e.mjs` | x402.org → CDP (base-sepolia) | faucet USDC | before deploys; manual CI dispatch |
-| Mainnet canary | `scripts/e2e.mjs` vs prod | CDP mainnet | ~$2 real USDC | launch + monthly keep-alive |
+| Testnet e2e: real settlement over streamable HTTP | `scripts/e2e.mjs` | x402.org → CDP (base-sepolia) | exactly $0.50 faucet USDC | operator-approved manual CI dispatch only |
+| Mainnet canary | future operator-approved procedure; current scripts refuse mainnet | CDP mainnet | real USDC | blocked on every Phase 3 gate |
 
 ## x402 transaction test matrix (vitest, `test/x402.test.ts`)
 
@@ -103,11 +103,15 @@ x402 v2 payment fields, a schema-valid MCP Bazaar declaration, and a signed
 Veristat quote.
 
 For the paid step, preload `BUYER_PRIVATE_KEY` through the operator's secure
-shell/session; never put its value in the command, evidence path, or chat.
-Start a separate filtered tail as documented in `docs/RUNBOOK.md`, then run:
+shell/session; never put its value in the command, evidence path, or chat. Both
+operator scripts fail before reading that variable or opening an MCP connection
+unless `ENABLE_PAID_CALL=1` is present, and they refuse every network except
+Base Sepolia. Start a separate filtered tail as documented in
+`docs/RUNBOOK.md`, then run:
 
 ```sh
 VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
+ENABLE_PAID_CALL=1 \
 NETWORK=eip155:84532 \
 EVIDENCE_FILE=docs/session-logs/<timestamp>-bazaar-rehearsal.json \
   node scripts/paid-call.mjs "Controlled Bazaar discovery rehearsal"
@@ -135,12 +139,13 @@ spending and escalate the sanitized record to x402-foundation/x402#2112.
 
 ## Tooling
 
-- **`scripts/e2e.mjs`** — the paid-call matrix against any `VERISTAT_URL`
-  (local `wrangler dev` or deployed): free tool works, unpaid 402 challenge has
-  the right shape, paid call returns a verdict with a settlement receipt,
-  underpayment is rejected. Uses `withX402Client` from `agents/x402` — the
-  same client real agent buyers use, so passing e2e is also x402 wire-format
-  compliance. Exits nonzero on any failure.
+- **`scripts/e2e.mjs`** — unpaid checks run against any `VERISTAT_URL`; paid
+  mode is hard-locked to the current Base Sepolia USDC asset, test receiver,
+  exact target resource, and `500000` atomic-unit quote. It requires
+  `ENABLE_PAID_CALL=1`, validates the challenge before signer construction, and
+  revalidates the retry requirements before approving payment. Uses
+  `withX402Client` from `agents/x402`, so passing e2e is also x402 wire-format
+  compliance. Exits nonzero on any mismatch.
 - **`scripts/bazaar-preflight.mjs`** — no-money validation of the exact live
   MCP payment challenge and Bazaar declaration. It never defaults to localhost.
 - **`scripts/paid-call.mjs` + `EVIDENCE_FILE`** — one paid call plus a
@@ -162,9 +167,11 @@ spending and escalate the sanitized record to x402-foundation/x402#2112.
 - `ci.yml`: typecheck + vitest on every push/PR. No secrets required (mock
   facilitator only).
 - Testnet smoke: manual `workflow_dispatch` job running `scripts/e2e.mjs`
-  against the deployed testnet worker. Secrets: `BUYER_PRIVATE_KEY` (throwaway
-  testnet key), panel API keys already live in the Worker. Keep it manual —
-  faucet balances and live model calls make it unsuitable for every push.
+  against the deployed testnet worker only when the required
+  `run_paid_testnet_e2e` boolean input is explicitly set to `true`. The workflow
+  fixes `NETWORK=eip155:84532` and `ENABLE_PAID_CALL=1`. Secrets:
+  `BUYER_PRIVATE_KEY` (throwaway testnet key); panel API keys already live in
+  the Worker. A default manual dispatch does not run the paid job.
 
 ## Local quick reference
 
@@ -177,5 +184,7 @@ VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
   npm run bazaar:preflight                 # schema-valid live challenge, no money
 node scripts/make-test-wallet.mjs          # buyer key → .wallets/, prints faucet link
 # with BUYER_PRIVATE_KEY already securely exported:
-VERISTAT_URL=http://localhost:8787/mcp node scripts/e2e.mjs  # full paid matrix
+ENABLE_PAID_CALL=1 NETWORK=eip155:84532 \
+  VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
+  node scripts/e2e.mjs                      # approved $0.50 testnet paid matrix
 ```

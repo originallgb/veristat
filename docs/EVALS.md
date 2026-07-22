@@ -1,9 +1,10 @@
 # Verification quality evaluations
 
 The evaluation harness gives Veristat a repeatable quality gate that is separate
-from payment and deployment testing. It exercises the same panel prompt,
-three-vendor panel orchestration, verdict schema, and synthesis path used by the
-MCP tool, but it never calls MCP, x402, settlement, or D1.
+from payment and deployment testing. The credential-free fixture check exercises
+the scorer and committed v1-shaped outputs; the opt-in live runner exercises the
+same panel prompt, three-vendor orchestration, verdict schema, and synthesis
+path used by the MCP tool. Neither path calls MCP, x402, settlement, or D1.
 
 ## Fixture regression check
 
@@ -14,15 +15,16 @@ npm run eval
 ```
 
 The command loads `eval/cases.json` and `eval/fixture-results.json`, validates
-every synthesized verdict with `verdictSchema`, and prints a JSON summary. It
-exits nonzero when case/result IDs are missing or duplicated, panel labels are
-malformed, a verdict fails its schema, or a tracked metric falls below the
-committed fixture baseline.
+the complete case, result, and baseline envelopes at runtime, validates every
+synthesized verdict with `verdictSchema`, and prints a JSON summary. It exits
+nonzero when fixture fields or case/result IDs are malformed or missing, panel
+labels are malformed, a verdict fails its schema, or a tracked metric falls
+below the committed fixture baseline.
 
-The public corpus contains synthetic claims only. It covers factual claims,
-code review, migration safety, ambiguous evidence, and adversarial claims, with
-examples of every supported verdict. No customer input or production response
-belongs in either fixture file.
+The public 20-case corpus contains synthetic claims only. It covers factual
+claims, code review, migration safety, ambiguous evidence, and adversarial
+claims, with five examples of each supported verdict. No customer input or
+production response belongs in either fixture file.
 
 The fixture is a deterministic regression test for the scorer and expected
 v1-shaped behavior. Its latency values are fixed test data, not a current

@@ -42,7 +42,7 @@ npm run dev                 # wrangler dev on :8787 (needs .dev.vars, see .dev.v
 npm run db:migrate:local    # apply D1 migrations locally (required before first dev run)
 node scripts/smoke.mjs      # against a running server: free tool + unpaid 402 challenge (no creds needed)
 # with BUYER_PRIVATE_KEY already securely exported:
-node scripts/paid-call.mjs "claim"   # paid e2e (funded base-sepolia wallet + panel API keys)
+ENABLE_PAID_CALL=1 NETWORK=eip155:84532 node scripts/paid-call.mjs "claim"   # approved $0.50 Base Sepolia paid e2e
 npm run deploy              # wrangler deploy
 ```
 
@@ -51,11 +51,11 @@ npm run deploy              # wrangler deploy
 The payment layer and the product pipeline are deliberately decoupled:
 
 - **`src/payments/x402.ts` — `PaymentGate`.** A custom paid-tool wrapper (the agents SDK's `paidTool` only supports static prices; this one computes the price per request). Wire-compatible with `withX402Client` from `agents/x402`: unpaid calls return an `isError` result carrying the 402 payload in `_meta["x402/error"]`; clients retry with a signed payment in `_meta["x402/payment"]`. **Settlement happens only after the tool callback succeeds** — a failed panel must never charge the buyer. The facilitator is injected via `@x402/core`'s `FacilitatorClient` interface: Coinbase CDP is active for the Base Sepolia rehearsal and planned mainnet launch; x402.org remains a plain-testnet option and Cloudflare Gateway is later. Tests inject `test/mock_facilitator.ts`. Receipt logging hooks in via `onSettled`.
-- **`src/payments/quoting.ts`** — deterministic pricing from args ($0.50/3-panel, $1.50/5-panel, +$0.50 over ~8k tokens) plus HMAC-signed 5-minute quote tokens returned in the 402 `extensions`. Pricing must stay deterministic: the retry re-derives the same amount from the same args.
+- **`src/payments/quoting.ts`** — deterministic pricing from args (the MVP fulfills and quotes both accepted panel sizes as the $0.50 three-panel service, +$0.50 over ~8k tokens) plus HMAC-signed 5-minute quote tokens returned in the 402 `extensions`. Pricing must stay deterministic: the retry re-derives the same amount from the same args.
 - **`src/mcp/server.ts` — `VeristatMCP` (McpAgent / Durable Object)** wires tools to the gate. MVP accepts `panel_size: 5` and `mode: adversarial` but hard-routes quoting to 3-panel. `research_fanout`/`get_research_result` are intentional stubs returning `NOT_AVAILABLE`.
 - **`src/panel/`** — `providers.ts` (raw fetch clients; vendor diversity is mandatory — never two models from one vendor), `orchestrator.ts` (parallel fan-out, 60s ceiling, degrades at 2/3 with `panel_degraded` flag), `synthesis.ts` (one extra model call, output parsed against `verdictSchema`).
 - **`src/prompts/`** — versioned prompt modules; the version string is logged with every request. New prompt = new file (`panel_v2.ts`), never edit-in-place.
-- **`src/logging.ts` + `migrations/`** — D1: `settlements` (demand proof) and `requests` (eval flywheel, no payer identity). Logging must never fail a paid request; errors are swallowed.
+- **`src/logging.ts` + `migrations/`** — D1: `settlements` (demand proof, including payer) and `requests` (full submission/panel/verdict for the eval flywheel). The shared request ID makes the tables joinable; see the unresolved privacy/retention plan. Logging must never fail a paid request; errors are swallowed.
 - **`src/index.ts`** — Hono for `/`, `/health`, `/price`; `/mcp` is routed to the McpAgent before Hono.
 
 ## Deployment

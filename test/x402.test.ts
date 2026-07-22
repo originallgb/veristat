@@ -7,8 +7,16 @@ import { withX402Client } from "agents/x402";
 import { toClientEvmSigner } from "@x402/evm";
 import { privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
-import { PaymentGate, type SettlementInfo } from "../src/payments/x402";
-import { hashRequest, signQuote } from "../src/payments/quoting";
+import {
+  MAX_ENCODED_PAYMENT_TOKEN_CHARS,
+  PaymentGate,
+  type SettlementInfo
+} from "../src/payments/x402";
+import {
+  hashRequest,
+  MAX_ENCODED_QUOTE_TOKEN_CHARS,
+  signQuote
+} from "../src/payments/quoting";
 import { consensusCheckDiscovery } from "../src/payments/discovery";
 import { MockFacilitator } from "./mock_facilitator";
 
@@ -20,12 +28,14 @@ const RECIPIENT = "0x1111111111111111111111111111111111111111" as const;
 
 async function setup(opts?: {
   failSettle?: boolean;
+  omitPayerOnSettle?: boolean;
   toolFails?: boolean;
   discovery?: Record<string, unknown>;
   publicUrl?: string;
 }) {
   const facilitator = new MockFacilitator(NETWORK);
   facilitator.failSettle = opts?.failSettle ?? false;
+  facilitator.omitPayerOnSettle = opts?.omitPayerOnSettle ?? false;
 
   const gate = new PaymentGate({
     network: NETWORK,
@@ -143,6 +153,29 @@ describe("x402 payment gate", () => {
     expect(receipt.success).toBe(true);
     expect(String(receipt.transaction)).toMatch(/^0xmock/);
     expect(settled).toHaveLength(1);
+    const paidPayload = facilitator.settleCalls[0].payload as Record<string, any>;
+    expect(typeof paidPayload.extensions?.["veristat/quote"]?.token).toBe("string");
+  });
+
+  it("falls back to the verified payer when settle omits it", async () => {
+    const { facilitator, payingClient, settled } = await setup({
+      omitPayerOnSettle: true
+    });
+    const res = await payingClient.callTool(async () => true, {
+      name: "echo_paid",
+      arguments: { message: "hello" }
+    });
+
+    expect(res.isError ?? false).toBe(false);
+    const expectedPayer = privateKeyToAccount(TEST_PK).address;
+    expect(facilitator.settleCalls).toHaveLength(1);
+    expect(res._meta?.["x402/payment-response"]).toMatchObject({
+      success: true,
+      payer: expectedPayer
+    });
+    expect(settled).toEqual([
+      expect.objectContaining({ payer: expectedPayer })
+    ]);
   });
 
   it("does not settle when the tool fails", async () => {
@@ -263,10 +296,12 @@ describe("x402 payment gate", () => {
       requestHash: await hashRequest({ name: "echo_paid", args }),
       expiresAt: Date.now() - 1
     });
-    const paid = facilitator.settleCalls[0].payload;
+    const paid = structuredClone(
+      facilitator.settleCalls[0].payload
+    ) as Record<string, any>;
+    paid.extensions["veristat/quote"].token = expiredQuote;
     const res = await rawCall(args, {
-      "x402/payment": btoa(JSON.stringify(paid)),
-      "veristat/quote": expiredQuote
+      "x402/payment": btoa(JSON.stringify(paid))
     });
     expect(res.isError).toBe(true);
     const err = res._meta?.["x402/error"] as Record<string, unknown>;
@@ -287,14 +322,137 @@ describe("x402 payment gate", () => {
       requestHash: await hashRequest({ name: "echo_paid", args }),
       expiresAt: Date.now() + 60_000
     });
-    const paid = facilitator.settleCalls[0].payload;
+    const paid = structuredClone(
+      facilitator.settleCalls[0].payload
+    ) as Record<string, any>;
+    paid.extensions["veristat/quote"].token = cheapQuote;
     const res = await rawCall(args, {
-      "x402/payment": btoa(JSON.stringify(paid)),
-      "veristat/quote": cheapQuote
+      "x402/payment": btoa(JSON.stringify(paid))
     });
     expect(res.isError).toBe(true);
     const err = res._meta?.["x402/error"] as Record<string, unknown>;
     expect(err.error).toBe("QUOTE_PRICE_MISMATCH");
+    expect(facilitator.settleCalls).toHaveLength(1);
+  });
+
+  it("accepts the legacy separate quote echo after normalizing it into the payload", async () => {
+    const { facilitator, payingClient, rawCall } = await setup();
+    await payingClient.callTool(async () => true, {
+      name: "echo_paid",
+      arguments: { message: "hello" }
+    });
+    const paid = structuredClone(
+      facilitator.settleCalls[0].payload
+    ) as Record<string, any>;
+    const legacyQuote = paid.extensions["veristat/quote"].token as string;
+    delete paid.extensions["veristat/quote"];
+    const verifiesBefore = facilitator.verifyCalls.length;
+
+    const res = await rawCall(
+      { message: "hello" },
+      {
+        "x402/payment": btoa(JSON.stringify(paid)),
+        "veristat/quote": legacyQuote
+      }
+    );
+
+    expect(res.isError).toBe(true);
+    expect((res._meta?.["x402/error"] as Record<string, unknown>).error).toBe(
+      "NONCE_ALREADY_USED"
+    );
+    expect(facilitator.verifyCalls).toHaveLength(verifiesBefore + 1);
+    expect(facilitator.settleCalls).toHaveLength(1);
+  });
+
+  it("rejects a missing quote before consulting the facilitator", async () => {
+    const { facilitator, payingClient, rawCall } = await setup();
+    await payingClient.callTool(async () => true, {
+      name: "echo_paid",
+      arguments: { message: "hello" }
+    });
+    const paid = structuredClone(
+      facilitator.settleCalls[0].payload
+    ) as Record<string, any>;
+    delete paid.extensions["veristat/quote"];
+    const verifiesBefore = facilitator.verifyCalls.length;
+
+    const res = await rawCall(
+      { message: "hello" },
+      { "x402/payment": btoa(JSON.stringify(paid)) }
+    );
+
+    expect(res.isError).toBe(true);
+    expect((res._meta?.["x402/error"] as Record<string, unknown>).error).toBe(
+      "QUOTE_REQUIRED"
+    );
+    expect(facilitator.verifyCalls).toHaveLength(verifiesBefore);
+    expect(facilitator.settleCalls).toHaveLength(1);
+  });
+
+  it("rejects oversized payment metadata before parsing or facilitator calls", async () => {
+    const { facilitator, rawCall } = await setup();
+    const res = await rawCall(
+      { message: "hello" },
+      { "x402/payment": "A".repeat(MAX_ENCODED_PAYMENT_TOKEN_CHARS + 1) }
+    );
+
+    expect(res.isError).toBe(true);
+    expect((res._meta?.["x402/error"] as Record<string, unknown>).error).toBe(
+      "PAYMENT_TOO_LARGE"
+    );
+    expect(facilitator.verifyCalls).toHaveLength(0);
+    expect(facilitator.settleCalls).toHaveLength(0);
+  });
+
+  it("rejects an oversized quote in the encoded payload before facilitator calls", async () => {
+    const { facilitator, payingClient, rawCall } = await setup();
+    await payingClient.callTool(async () => true, {
+      name: "echo_paid",
+      arguments: { message: "hello" }
+    });
+    const paid = structuredClone(
+      facilitator.settleCalls[0].payload
+    ) as Record<string, any>;
+    paid.extensions["veristat/quote"].token = "A".repeat(
+      MAX_ENCODED_QUOTE_TOKEN_CHARS + 1
+    );
+    const verifiesBefore = facilitator.verifyCalls.length;
+
+    const res = await rawCall(
+      { message: "hello" },
+      { "x402/payment": btoa(JSON.stringify(paid)) }
+    );
+
+    expect(res.isError).toBe(true);
+    expect((res._meta?.["x402/error"] as Record<string, unknown>).error).toBe(
+      "QUOTE_TOO_LARGE"
+    );
+    expect(facilitator.verifyCalls).toHaveLength(verifiesBefore);
+    expect(facilitator.settleCalls).toHaveLength(1);
+  });
+
+  it("rejects a malformed quote in the encoded payload before facilitator calls", async () => {
+    const { facilitator, payingClient, rawCall } = await setup();
+    await payingClient.callTool(async () => true, {
+      name: "echo_paid",
+      arguments: { message: "hello" }
+    });
+    const paid = structuredClone(
+      facilitator.settleCalls[0].payload
+    ) as Record<string, any>;
+    paid.extensions["veristat/quote"].token = { not: "a string" };
+    const verifiesBefore = facilitator.verifyCalls.length;
+
+    const res = await rawCall(
+      { message: "hello" },
+      { "x402/payment": btoa(JSON.stringify(paid)) }
+    );
+
+    expect(res.isError).toBe(true);
+    expect((res._meta?.["x402/error"] as Record<string, unknown>).error).toBe(
+      "MALFORMED_QUOTE"
+    );
+    expect(facilitator.verifyCalls).toHaveLength(verifiesBefore);
     expect(facilitator.settleCalls).toHaveLength(1);
   });
 

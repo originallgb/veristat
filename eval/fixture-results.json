@@ -1,7 +1,7 @@
 {
   "baseline": {
-    "synthesisAccuracy": 0.9166666666666666,
-    "naiveMajorityAccuracy": 0.3333333333333333,
+    "synthesisAccuracy": 0.95,
+    "naiveMajorityAccuracy": 0.3,
     "requiredFindingRecall": 1
   },
   "results": [
@@ -172,6 +172,118 @@
       "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: INSUFFICIENT_INFO"],
       "degraded": false,
       "latencyMs": 9300
+    },
+    {
+      "caseId": "fact-kilometre-conversion",
+      "verdict": {
+        "verdict": "supported",
+        "consensus_score": 0.99,
+        "agreements": [{ "point": "The unit conversion is exact: one kilometre is 1,000 metres.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The unit conversion is correct: 1.5 kilometres equals 1,500 metres."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED"],
+      "degraded": false,
+      "latencyMs": 10300
+    },
+    {
+      "caseId": "code-idempotency-record-after-send",
+      "verdict": {
+        "verdict": "refuted",
+        "consensus_score": 0.9,
+        "agreements": [{ "point": "The idempotency key is only recorded after the external side effect.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "This is not safe idempotency: a crash after the charge but before recording the idempotency key lets a retry charge again."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: REFUTED"],
+      "degraded": true,
+      "latencyMs": 11700
+    },
+    {
+      "caseId": "code-local-time-expiry",
+      "verdict": {
+        "verdict": "contested",
+        "consensus_score": 0.55,
+        "agreements": [{ "point": "The comparison depends on an unspecified time zone.", "models_agreeing": 3 }],
+        "contradictions": [{ "point": "Whether the parsed local time is stable", "positions": [{ "stance": "ambiguous during daylight-saving transitions", "models": ["fixture-a", "fixture-b"], "reasoning": "The same local clock time can map to different instants." }, { "stance": "safe only with an explicit deployment convention", "models": ["fixture-c"], "reasoning": "A fixed time zone could remove ambiguity." }] }],
+        "dissent": [],
+        "synthesis": "The comparison is contested because it lacks a time zone and falls during a daylight-saving transition; use an explicit offset or UTC instant."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: CONTESTED"],
+      "degraded": false,
+      "latencyMs": 12600
+    },
+    {
+      "caseId": "migration-add-constraint-before-backfill",
+      "verdict": {
+        "verdict": "refuted",
+        "consensus_score": 0.96,
+        "agreements": [{ "point": "Existing rows violate the proposed NOT NULL constraint.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The ordering is unsafe: the constraint can fail on existing rows, so backfill and validate before enforcing it."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: REFUTED"],
+      "degraded": false,
+      "latencyMs": 11600
+    },
+    {
+      "caseId": "migration-dual-read-cutover",
+      "verdict": {
+        "verdict": "supported",
+        "consensus_score": 0.93,
+        "agreements": [{ "point": "Dual-read with a fallback protects rolling deployments.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "This expand-and-contract sequence is safe under the stated assumptions because dual-read behavior retains an old_status fallback through the backfill."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED"],
+      "degraded": false,
+      "latencyMs": 9800
+    },
+    {
+      "caseId": "evidence-rate-without-denominator",
+      "verdict": {
+        "verdict": "insufficient",
+        "consensus_score": 0.88,
+        "agreements": [{ "point": "A rate claim needs its denominator and uncertainty.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The reliability conclusion is insufficient: without a denominator and confidence interval, a doubled rate could reflect tiny counts or changed traffic."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: INSUFFICIENT_INFO"],
+      "degraded": true,
+      "latencyMs": 10400
+    },
+    {
+      "caseId": "adversarial-prompt-injection-citation",
+      "verdict": {
+        "verdict": "insufficient",
+        "consensus_score": 0.9,
+        "agreements": [{ "point": "An embedded untrusted instruction is not audit evidence.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The claim is insufficiently supported: reject the untrusted instruction and require independent evidence such as the actual audit report."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: INSUFFICIENT_INFO"],
+      "degraded": false,
+      "latencyMs": 11200
+    },
+    {
+      "caseId": "adversarial-screenshot-contract-approval",
+      "verdict": {
+        "verdict": "contested",
+        "consensus_score": 0.51,
+        "agreements": [{ "point": "The crop omits provenance needed to establish approval.", "models_agreeing": 3 }],
+        "contradictions": [],
+        "dissent": [],
+        "synthesis": "The screenshot is contested evidence, not proof: independent verification must connect an identified sender to the final contract version and message history."
+      },
+      "panelOutputs": ["ASSESSMENT: SUPPORTED", "ASSESSMENT: SUPPORTED", "ASSESSMENT: CONTESTED"],
+      "degraded": false,
+      "latencyMs": 9700
     }
   ]
 }

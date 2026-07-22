@@ -26,5 +26,6 @@ console.log(`
 Fund it (USDC only, no ETH needed):
   1. https://faucet.circle.com → Base Sepolia → ${account.address}
      (20 USDC per address per 2 hours)
-  2. Then: BUYER_PRIVATE_KEY=$(cat ${path}) node scripts/e2e.mjs
+  2. Securely export BUYER_PRIVATE_KEY from ${path} without printing it.
+  3. Then: ENABLE_PAID_CALL=1 NETWORK=eip155:84532 node scripts/e2e.mjs
 `);

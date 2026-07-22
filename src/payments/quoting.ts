@@ -11,6 +11,10 @@
 // ~4 chars/token heuristic; surcharge threshold is 8k tokens (spec §3)
 const SURCHARGE_CHAR_THRESHOLD = 8_000 * 4;
 export const QUOTE_TTL_MS = 5 * 60 * 1000;
+/** Signed quotes are normally a few hundred characters. Keep a generous hard
+ * ceiling so attacker-controlled metadata cannot drive unbounded HMAC/base64
+ * work before payment verification. */
+export const MAX_ENCODED_QUOTE_TOKEN_CHARS = 4_096;
 
 export interface QuoteInput {
   panelSize: 3 | 5;
@@ -64,6 +68,8 @@ export async function verifyQuote(
   expected: { priceUSD: number; requestHash: string },
   now = Date.now()
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
+  if (token.length > MAX_ENCODED_QUOTE_TOKEN_CHARS)
+    return { ok: false, reason: "QUOTE_TOO_LARGE" };
   const [body, sig] = token.split(".");
   if (!body || !sig) return { ok: false, reason: "MALFORMED_QUOTE" };
   if ((await hmac(signingKey, body)) !== sig)

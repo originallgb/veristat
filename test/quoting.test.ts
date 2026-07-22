@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   computePriceUSD,
   hashRequest,
+  MAX_ENCODED_QUOTE_TOKEN_CHARS,
   signQuote,
   verifyQuote
 } from "../src/payments/quoting";
@@ -65,5 +66,14 @@ describe("quote tokens", () => {
     });
     const res = await verifyQuote(key, token, { priceUSD: 0.5, requestHash });
     expect(res).toEqual({ ok: false, reason: "BAD_QUOTE_SIGNATURE" });
+  });
+
+  it("rejects oversized tokens before signature or base64 work", async () => {
+    const res = await verifyQuote(
+      key,
+      "A".repeat(MAX_ENCODED_QUOTE_TOKEN_CHARS + 1),
+      { priceUSD: 0.5, requestHash: await hashRequest({ a: 1 }) }
+    );
+    expect(res).toEqual({ ok: false, reason: "QUOTE_TOO_LARGE" });
   });
 });
