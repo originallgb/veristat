@@ -60,6 +60,7 @@ The payment layer and the product pipeline are deliberately decoupled:
 
 ## Deployment
 
+- Always verify actual health by checking the new deploy's version/build ID, not just an HTTP 200 — a passing health check may come from a prior deployment still serving traffic (e.g. `wrangler deployments list` / the `/health` response's version field vs. the version just deployed).
 - Cloudflare version metadata is active in `/health`. Verify its `version`
   equals the version ID printed by `wrangler deploy`, preferably with
   `EXPECTED_VERSION=<id> VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp node scripts/smoke.mjs`.
