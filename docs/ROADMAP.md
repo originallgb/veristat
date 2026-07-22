@@ -194,9 +194,10 @@ deferrals are in
       GitHub OIDC publication automation
 - [x] Quality-evaluation baseline: deterministic labelled fixtures, synthesis
       versus naive-majority metrics, and an opt-in no-x402 live runner
-- [ ] Expand the stable baseline to 20–30 deep, labelled verification cases
+- [x] Expand the stable baseline to 20–30 deep, labelled verification cases
       ([#6](https://github.com/originallgb/veristat/issues/6))
       across factual, code/review, migration, ambiguous, and adversarial work
+      (20 credential-free synthetic cases; live comparison remains optional)
 - [x] Document the current D1 storage truth and the bounded-retention,
       caller-control, and aggregate-only alternatives in
       [`docs/plans/privacy-and-retention.md`](plans/privacy-and-retention.md)
@@ -210,7 +211,10 @@ deferrals are in
       [`docs/plans/buyer-integration-pack.md`](plans/buyer-integration-pack.md)
 - [ ] Implement and fresh-environment-test the buyer integration pack
       ([#7](https://github.com/originallgb/veristat/issues/7)); the
-      default path must be unable to spend
+      synthetic-only unpaid slice now has mocked coverage, a standalone
+      lockfile, and a verified clean install. Its public smoke fails closed on
+      the documented source-versus-Worker contract mismatch; the optional
+      paid buyer path remains. The default path must be unable to spend
 - [ ] Draft registry/directory copy, first-user harnesses, outreach text, and a
       launch checklist; do not submit, publish, post, or send without operator
       approval ([#8](https://github.com/originallgb/veristat/issues/8))
@@ -226,6 +230,12 @@ this prelaunch track.
 
 - [x] Finalize `server.json`: `io.github.originallgb/veristat`, real
       workers.dev URL
+- [ ] Release-truth gate: current registry/public-contract source is newer
+      than the active Worker at that URL. Before registry login, tagging, or
+      publication, an operator must authorize a deployment and verify the
+      public root/`/price`, free sample, and unpaid-402 contract against the
+      exact deployed endpoint. This does not authorize a mainnet change or
+      paid call.
 - [ ] **USER**: `mcp-publisher login github` (device-code flow)
 - [ ] `mcp-publisher publish` (run `mcp-publisher validate server.json` first;
       `publish --dry-run` is obsolete)

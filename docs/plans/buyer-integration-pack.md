@@ -1,8 +1,12 @@
 # Buyer integration pack plan
 
-Status: implementation plan. The examples described here do not yet exist,
-and this document does not authorize a paid smoke, mainnet call, publication,
-or outreach.
+Status: partial implementation. `examples/node-buyer/` now provides the
+synthetic-only, no-payment Flow 1 with a standalone lockfile, deterministic
+mocked coverage, and a verified clean install. The live public smoke currently
+fails closed on the documented source-versus-Worker contract mismatch. The
+optional paid Flow 2 and its interactive confirmation remain unimplemented;
+shared operator payment guards are now fail-closed. This document does not authorize a
+paid smoke, mainnet call, publication, or outreach.
 
 ## Goal
 
