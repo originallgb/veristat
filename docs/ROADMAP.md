@@ -1,11 +1,13 @@
-# ROADMAP — testnet MVP → live on the x402 Bazaar
+# ROADMAP — testnet MVP → controlled public launch
 
 Status legend: `[x]` done · `[ ]` open · **USER** = needs an operator-supplied
 account/wallet/decision; everything else is agent-executable.
 
-The one-line goal: **listed and selling in the Coinbase x402 Bazaar and the
-official MCP registry, with instrumentation that can answer the ship gate
-(10 organic paying wallets in 30 days — `docs/STRATEGY.md`).**
+The one-line goal: **publicly purchasable on Base mainnet and verified in the
+official MCP Registry, with direct distribution and instrumentation that can
+answer the ship gate (10 organic paying wallets in 30 days —
+`docs/STRATEGY.md`).** Native-MCP Bazaar listing remains a separately recorded
+resolution or narrow-waiver decision; it is not silently assumed.
 
 ## Execution issue map
 
@@ -16,11 +18,17 @@ discussion and evidence.
 
 | Order | Issue | Outcome | Start condition |
 |---|---|---|---|
-| P0 | [#4](https://github.com/originallgb/veristat/issues/4) | Resolve Bazaar MCP indexing or record the narrow listing waiver | External confirmation or operator decision |
-| P0 | [#5](https://github.com/originallgb/veristat/issues/5) | Choose and implement privacy/retention | Operator chooses policy inputs |
-| P1 | [#6](https://github.com/originallgb/veristat/issues/6) | Expand evaluation to 20–30 deep cases | Unblocked now; live run remains optional |
-| P1 | [#7](https://github.com/originallgb/veristat/issues/7) | Ship the safe Node buyer integration pack | Implementation can start; real-content quickstart waits for #5 |
-| P1 | [#8](https://github.com/originallgb/veristat/issues/8) | Prepare and execute registry/distribution launch | Draft now; external actions wait for #4, #5, #7 and Phase 3 |
+| G0 | [#14](https://github.com/originallgb/veristat/issues/14) | Record the consolidated operator decisions and bounded authorities | Operator completes one non-secret packet |
+| G0.5 | [#19](https://github.com/originallgb/veristat/issues/19) | Finish the bounded Mathesa public-surface migration | #14 identity choices; reconcile the preserved branch with current `main` |
+| P0 | [#4](https://github.com/originallgb/veristat/issues/4) | Resolve Bazaar MCP indexing or record the narrow listing waiver | #14 Bazaar choice |
+| P0 | [#5](https://github.com/originallgb/veristat/issues/5) | Choose and implement privacy/retention | #14 privacy choice |
+| P0 | [#15](https://github.com/originallgb/veristat/issues/15) | Dispose of the documented moderate dependency residual | #14 risk choice; safe remediation is already on `main` |
+| P1 | [#6](https://github.com/originallgb/veristat/issues/6) | Credential-free 20-case quality corpus | **Complete**; live run remains optional |
+| P1 | [#7](https://github.com/originallgb/veristat/issues/7) | Finish the safe Node buyer integration pack | #5 and the reviewed testnet contract |
+| P1 | [#16](https://github.com/originallgb/veristat/issues/16) | Prepare the buyer-facing launch kit and first-ten outreach pack | #5, #7, and #19; drafting only until authorized |
+| P1 | [#17](https://github.com/originallgb/veristat/issues/17) | Align and deploy the reviewed public contract to Base Sepolia | #5, #14, #15, and #19; explicit deployment authority |
+| P1 | [#18](https://github.com/originallgb/veristat/issues/18) | Cut over to Base mainnet and complete one capped canary | All launch gates plus Workers Paid and wallet readiness |
+| P1 | [#8](https://github.com/originallgb/veristat/issues/8) | Controlled Registry, distribution, and first-canary launch epic | Completion evidence from all launch sub-issues |
 | P2 | [#9](https://github.com/originallgb/veristat/issues/9) | Decide whether operations need more than the CLI dashboard | Post-launch operational evidence |
 | P2 | [#10](https://github.com/originallgb/veristat/issues/10) | Rank panel, response, trust, and research product expansions | Day-30 demand gate |
 | P2 | [#11](https://github.com/originallgb/veristat/issues/11) | Evaluate trial, pricing, and payment-model experiments | Observed conversion or payment-friction problem |

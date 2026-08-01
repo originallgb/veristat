@@ -1,4 +1,4 @@
-# Current state — 2026-07-22
+# Current state — 2026-08-01
 
 This is the compact pickup document for humans and agents. Operational truth
 lives here, in `docs/ROADMAP.md`, and in `wrangler.jsonc`; `docs/SPEC.md`
@@ -19,6 +19,27 @@ remains the historical product/build decision record.
 - Mainnet is not enabled. The test receiver is not the operator's mainnet
   receiving address.
 
+## Source and launch orchestration
+
+- The latest source-bearing `main` commit before this docs-only handoff is
+  `1d64818`; CI is green. Commit `c2247d7` safely remediates the launch-path
+  high dependency advisories.
+- Current verification passes TypeScript, 80 Vitest tests, registry validation,
+  the 20-case fixture evaluation, and a Wrangler deployment dry run.
+- `npm audit --omit=dev --audit-level=high` reports zero critical/high and four
+  documented moderate findings. Dependabot has two open medium alerts for the
+  same transitive `@hono/node-server` Windows static-serving path. Issue #15
+  remains open for the operator disposition consolidated in issue #14.
+- Mathesa is the selected replacement masterbrand under ADR-0005 on the
+  preserved `codex/project-success-prep` branch. Its bounded migration map and
+  source-only display-copy slice end at `b5ef43e`; they are not merged into
+  current `main`. Repository, Worker, D1, payment, tool, and historical
+  identifiers remain held. Issue #19 owns the remaining identity decisions and
+  integration.
+- GitHub issue #8 is the controlled-launch epic. Issue #14 is the single
+  operator packet; #4, #5, #7, #15-#19 are its launch-path decisions and
+  implementation gates. Issue #6 is complete; #9-#11 remain post-launch.
+
 ## Registry/public-contract release gate
 
 The checked-in registry/public-contract source is newer than the active Worker.
@@ -36,7 +57,12 @@ free-sample, and unpaid-402 price-card/tool contract. This is a release-truth
 gate only; it does not authorize a deployment, registry publication, paid call,
 or any Phase 2/3 change.
 
-## Verified in this session
+## Verified evidence
+
+- The 2026-08-01 closeout re-ran TypeScript, all 80 tracked tests, registry
+  validation, the 20-case fixture evaluation, the production-dependency audit,
+  current Dependabot reads, and the Worker dry run. No live endpoint mutation
+  was part of those checks.
 
 - Stopped the orphaned `wrangler dev --remote --port 8787` process that had
   occupied localhost for roughly 13 hours.
@@ -82,16 +108,18 @@ or any Phase 2/3 change.
 
 ## Current gate
 
-Do not switch to mainnet until the Phase 2 diagnostic closeout in
-`docs/ROADMAP.md` is complete or the operator explicitly records a waiver.
-Do not publish the official MCP registry entry while the source-versus-live
-public-contract gate above remains open.
-Do not make another paid probe. The controlled evidence sequence and upstream
-escalation are complete, but the listing is still absent. The next decision is
-operator-only: keep Base Sepolia blocked while awaiting CDP confirmation of
-MCP indexing support, or explicitly record the narrow Bazaar-listing waiver.
-Do not run the suggested mainnet-MCP or Sepolia-HTTP paid A/B probes without a
-new operator decision. Never include wallet private keys, CDP secrets, payment
+Complete the non-secret decision packet in GitHub issue #14 first. It now
+contains the privacy, Bazaar, dependency-residual, public-identity, wallet,
+billing, deployment, migration, canary, publication, and outreach choices.
+Then reconcile issue #19's Mathesa branch with current `main`, implement #5,
+close #15 under the recorded risk choice, finish #7/#16, and use #17 for the
+explicitly authorized Base Sepolia source-to-live deployment and verification.
+
+Do not switch to mainnet, publish the registry entry, change repository
+visibility, purge D1, send outreach, or make a paid call merely because source
+checks pass. Issue #18 permits exactly one capped mainnet canary only after its
+prerequisites and authority are satisfied. Do not make another paid Bazaar
+probe. Never include wallet private keys, CDP secrets, payment
 signatures/payloads, quote tokens, prompts, or verdict bodies.
 
 ## Repository state conventions
