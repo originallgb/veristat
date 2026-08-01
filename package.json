@@ -21,12 +21,12 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@coinbase/cdp-sdk": "^1.52.0",
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "@x402/core": "^2.18.0",
-    "@x402/evm": "^2.18.0",
-    "@x402/extensions": "^2.18.0",
-    "agents": "^0.17.3",
+    "@coinbase/cdp-sdk": "1.52.0",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "@x402/core": "2.18.0",
+    "@x402/evm": "2.18.0",
+    "@x402/extensions": "2.18.0",
+    "agents": "0.17.3",
     "hono": "^4.12.29",
     "zod": "^4.4.3"
   },
@@ -38,12 +38,18 @@
     "undici": "^8.7.0",
     "viem": "^2.55.0",
     "vitest": "^4.1.10",
-    "wrangler": "^4.110.0"
+    "wrangler": "4.116.0"
+  },
+  "overrides": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "axios": "^1.18.0",
+    "fast-uri": "^3.1.4",
+    "postcss": "^8.5.18"
   },
   "allowScripts": {
-    "workerd@1.20260708.1": true,
+    "workerd@1.20260730.1": true,
     "esbuild@0.28.1": true,
-    "sharp@0.34.5": true,
+    "sharp@0.35.2": true,
     "core-js-pure@3.49.0": true
   }
 }
