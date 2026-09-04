@@ -21,3 +21,6 @@ We adopt a "zero-toxic-waste" privacy policy for launch.
 ## Consequences
 - **Positive:** Eliminates the risk of leaking sensitive user data from our database. Lowers compliance burdens. Appeals to privacy-conscious users.
 - **Negative:** We lose the ability to retrospectively debug specific failed verifications by looking at the exact text that caused the issue, or to build a dataset for fine-tuning based on user traffic. We rely purely on aggregate telemetry.
+
+> [!WARNING]
+> `migrations/0003_privacy_retention.sql` permanently drops raw user text columns (`input_json`, `panel_json`, `verdict_json`). Operators must take a remote D1 backup (e.g. `npx wrangler d1 export veristat --remote --output backup.sql`) before applying it in environments with historical data.

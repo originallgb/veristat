@@ -138,6 +138,7 @@ export class VeristatMCP extends McpAgent<Env> {
           inputHash,
           verdictLabel: verdict.verdict,
           consensusScore: verdict.consensus_score,
+          // v1 raw-fetch providers omit token counts; usage telemetry will be extracted in v2.
           totalTokens: 0,
           modelCount: outcome.succeeded.length,
           degraded: outcome.degraded,

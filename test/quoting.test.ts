@@ -68,6 +68,36 @@ describe("quote tokens", () => {
     expect(res).toEqual({ ok: false, reason: "BAD_QUOTE_SIGNATURE" });
   });
 
+  it("rejects corrupted/invalid base64 signatures", async () => {
+    const requestHash = await hashRequest({ a: 1 });
+    const token = await signQuote(key, {
+      priceUSD: 0.5,
+      requestHash,
+      expiresAt: Date.now() + 60_000
+    });
+    const [body] = token.split(".");
+    const res = await verifyQuote(key, `${body}.not-valid-base64!@#$`, {
+      priceUSD: 0.5,
+      requestHash
+    });
+    expect(res).toEqual({ ok: false, reason: "BAD_QUOTE_SIGNATURE" });
+  });
+
+  it("rejects bad signatures with valid base64", async () => {
+    const requestHash = await hashRequest({ a: 1 });
+    const token = await signQuote(key, {
+      priceUSD: 0.5,
+      requestHash,
+      expiresAt: Date.now() + 60_000
+    });
+    const [body] = token.split(".");
+    const res = await verifyQuote(key, `${body}.${btoa("invalid-hmac-signature")}`, {
+      priceUSD: 0.5,
+      requestHash
+    });
+    expect(res).toEqual({ ok: false, reason: "BAD_QUOTE_SIGNATURE" });
+  });
+
   it("rejects oversized tokens before signature or base64 work", async () => {
     const res = await verifyQuote(
       key,

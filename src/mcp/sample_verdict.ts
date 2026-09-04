@@ -49,7 +49,7 @@ export function priceCard(network: string) {
   return {
     consensus_check: {
       fulfilled_panel_size: 3,
-      current_price: "$0.50",
+      current_price: `$${computePriceUSD({ panelSize: 3, contentChars: 0 }).toFixed(2)}`,
       accepted_panel_size_values: [3, 5],
       panel_size_5_compatibility:
         "accepted for compatibility; the current MVP fulfills and quotes it as a 3-panel check",

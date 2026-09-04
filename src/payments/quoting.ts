@@ -72,8 +72,25 @@ export async function verifyQuote(
     return { ok: false, reason: "QUOTE_TOO_LARGE" };
   const [body, sig] = token.split(".");
   if (!body || !sig) return { ok: false, reason: "MALFORMED_QUOTE" };
-  if ((await hmac(signingKey, body)) !== sig)
+  try {
+    const sigBytes = Uint8Array.from(atob(sig), (c) => c.charCodeAt(0));
+    const k = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(signingKey),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+    const valid = await crypto.subtle.verify(
+      "HMAC",
+      k,
+      sigBytes,
+      new TextEncoder().encode(body)
+    );
+    if (!valid) return { ok: false, reason: "BAD_QUOTE_SIGNATURE" };
+  } catch {
     return { ok: false, reason: "BAD_QUOTE_SIGNATURE" };
+  }
   let quote: Quote;
   try {
     quote = JSON.parse(atob(body));
