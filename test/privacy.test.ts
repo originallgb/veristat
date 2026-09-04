@@ -1,5 +1,5 @@
 import { expect, test, describe, vi } from "vitest";
-import { logRequest, deleteRequestData, type RequestRecord } from "../src/logging";
+import { logRequest, type RequestRecord } from "../src/logging";
 
 describe("Privacy & Retention Policy (ADR-0004)", () => {
   test("SHA-256 hashing is deterministic and produces 64-char hex", async () => {
@@ -49,19 +49,6 @@ describe("Privacy & Retention Policy (ADR-0004)", () => {
     expect(record.verdictLabel).toBeDefined();
   });
 
-  test("deleteRequestData issues correct query", async () => {
-    const mockDb = {
-      prepare: vi.fn().mockReturnThis(),
-      bind: vi.fn().mockReturnThis(),
-      run: vi.fn().mockResolvedValue(undefined)
-    };
-    
-    await deleteRequestData(mockDb as any, "req-123");
-    
-    expect(mockDb.prepare).toHaveBeenCalledWith("DELETE FROM requests WHERE request_id = ?");
-    expect(mockDb.bind).toHaveBeenCalledWith("req-123");
-    expect(mockDb.run).toHaveBeenCalled();
-  });
 
   test("logRequest swallows errors and never throws", async () => {
     const mockDb = {

@@ -61,13 +61,3 @@ export async function logRequest(db: D1Database, r: RequestRecord): Promise<void
   }
 }
 
-export async function deleteRequestData(db: D1Database, requestId: string): Promise<void> {
-  try {
-    await db
-      .prepare(`DELETE FROM requests WHERE request_id = ?`)
-      .bind(requestId)
-      .run();
-  } catch (e) {
-    console.error("request delete failed", requestId, e);
-  }
-}
