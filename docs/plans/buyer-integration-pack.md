@@ -1,12 +1,14 @@
 # Buyer integration pack plan
 
-Status: partial implementation. `examples/node-buyer/` now provides the
-synthetic-only, no-payment Flow 1 with a standalone lockfile, deterministic
-mocked coverage, and a verified clean install. The live public smoke currently
-fails closed on the documented source-versus-Worker contract mismatch. The
-optional paid Flow 2 and its interactive confirmation remain unimplemented;
-shared operator payment guards are now fail-closed. This document does not authorize a
-paid smoke, mainnet call, publication, or outreach.
+Status: Complete and verified. `examples/node-buyer/` provides both Flow 1
+(synthetic-only, no-payment default) and Flow 2 (optional paid Base Sepolia
+rehearsal with fail-closed environment safeguards, contract pinning, confirmation
+hook, and sanitized settlement logging) with standalone lockfile, deterministic
+mocked test coverage, and clean install verification. The live public rehearsal
+Worker (`https://veristat.grant-23a.workers.dev/mcp`) matches the source contract
+($0.50, 3-panel fulfilled), and the privacy disclosure references the adopted
+ADR-0004 Zero-Toxic-Waste policy. This document does not authorize a mainnet call,
+directory publication, or external outreach.
 
 ## Goal
 

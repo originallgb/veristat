@@ -7,6 +7,13 @@ import {
   SYNTHETIC_REQUEST,
   runUnpaidBuyer
 } from "../examples/node-buyer/unpaid.mjs";
+import {
+  EXPECTED_AMOUNT,
+  EXPECTED_ASSET,
+  EXPECTED_NETWORK,
+  EXPECTED_PAYEE,
+  runPaidBuyer
+} from "../examples/node-buyer/paid-base-sepolia.mjs";
 
 const sample = {
   sample_verdict: { verdict: "contested" },
@@ -37,6 +44,32 @@ const challenge = {
   }
 };
 
+const paidChallenge = {
+  error: "PAYMENT_REQUIRED",
+  accepts: [{
+    scheme: "exact",
+    network: EXPECTED_NETWORK,
+    amount: EXPECTED_AMOUNT,
+    asset: EXPECTED_ASSET,
+    payTo: EXPECTED_PAYEE,
+    maxTimeoutSeconds: 300,
+    extra: { name: "USD Coin", version: "2" }
+  }],
+  x402Version: 2,
+  resource: { url: DEFAULT_VERISTAT_URL },
+  extensions: {
+    bazaar: { info: { input: { toolName: "consensus_check", transport: "streamable-http" } } },
+    "veristat/quote": { priceUSD: 0.5, token: "must-never-be-logged" }
+  }
+};
+
+const TEST_PK = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+const VALID_ENV = {
+  ENABLE_PAID_CALL: "1",
+  NETWORK: "eip155:84532",
+  BUYER_PRIVATE_KEY: TEST_PK
+};
+
 function mockClient(overrides: Record<string, unknown> = {}) {
   const calls: unknown[] = [];
   const client = {
@@ -54,6 +87,38 @@ function mockClient(overrides: Record<string, unknown> = {}) {
       return { isError: true, _meta: { "x402/error": challenge } };
     },
     ...overrides
+  };
+  return { client, calls };
+}
+
+function mockPaidClient(challengeOverride: any = paidChallenge) {
+  const calls: unknown[] = [];
+  const client = {
+    connected: false,
+    closed: false,
+    async connect() { this.connected = true; },
+    async close() { this.closed = true; },
+    async listTools() {
+      return { tools: [{ name: "consensus_check" }, { name: "get_sample_verdict" }] };
+    },
+    async callTool(request: unknown) {
+      calls.push(request);
+      if (calls.length === 1) {
+        return { isError: true, _meta: { "x402/error": challengeOverride } };
+      }
+      return {
+        isError: false,
+        content: [{ text: JSON.stringify({ verdict: "verified", request_id: "req-paid-123" }) }],
+        _meta: {
+          "x402/payment-response": {
+            success: true,
+            transaction: "0xmocktx123",
+            network: "eip155:84532",
+            payer: "0xmockpayer123"
+          }
+        }
+      };
+    }
   };
   return { client, calls };
 }
@@ -157,5 +222,144 @@ describe("unpaid Node buyer example", () => {
     const testDirectory = dirname(fileURLToPath(import.meta.url));
     const source = await readFile(resolve(testDirectory, "../examples/node-buyer/unpaid.mjs"), "utf8");
     expect(source).not.toMatch(/withX402Client|BUYER_PRIVATE_KEY|privateKeyToAccount|toClientEvmSigner|agents\/x402|@x402\/evm/);
+  });
+});
+
+describe("paid Node buyer example (Base Sepolia)", () => {
+  it("throws if ENABLE_PAID_CALL is not 1", async () => {
+    const { client } = mockPaidClient();
+    await expect(
+      runPaidBuyer({
+        env: { ...VALID_ENV, ENABLE_PAID_CALL: "0" },
+        createClient: () => client,
+        createTransport: () => ({})
+      })
+    ).rejects.toThrow(
+      "PAID_CALL_NOT_ENABLED: Paid mode is disabled. Set ENABLE_PAID_CALL=1 only for an approved Base Sepolia rehearsal."
+    );
+    expect(client.closed).toBe(false);
+  });
+
+  it("throws if NETWORK is not eip155:84532 (e.g. eip155:8453)", async () => {
+    const { client } = mockPaidClient();
+    await expect(
+      runPaidBuyer({
+        env: { ...VALID_ENV, NETWORK: "eip155:8453" },
+        createClient: () => client,
+        createTransport: () => ({})
+      })
+    ).rejects.toThrow("PAID_NETWORK_NOT_ALLOWED: Paid buyer is locked to eip155:84532.");
+  });
+
+  it("throws if BUYER_PRIVATE_KEY is missing", async () => {
+    const { client } = mockPaidClient();
+    await expect(
+      runPaidBuyer({
+        env: { ENABLE_PAID_CALL: "1", NETWORK: "eip155:84532" },
+        createClient: () => client,
+        createTransport: () => ({})
+      })
+    ).rejects.toThrow("BUYER_KEY_MISSING: BUYER_PRIVATE_KEY must be supplied in environment.");
+  });
+
+  it("rejects tampered challenge with amount > 500000", async () => {
+    const tampered = {
+      ...paidChallenge,
+      accepts: [{ ...paidChallenge.accepts[0], amount: "600000" }]
+    };
+    const { client, calls } = mockPaidClient(tampered);
+    await expect(
+      runPaidBuyer({
+        env: VALID_ENV,
+        createClient: () => client,
+        createTransport: () => ({})
+      })
+    ).rejects.toThrow(/UNEXPECTED_AMOUNT/);
+    expect(client.closed).toBe(true);
+    expect(calls).toHaveLength(1);
+  });
+
+  it("rejects tampered challenge with wrong asset", async () => {
+    const tampered = {
+      ...paidChallenge,
+      accepts: [{ ...paidChallenge.accepts[0], asset: "0x1111111111111111111111111111111111111111" }]
+    };
+    const { client, calls } = mockPaidClient(tampered);
+    await expect(
+      runPaidBuyer({
+        env: VALID_ENV,
+        createClient: () => client,
+        createTransport: () => ({})
+      })
+    ).rejects.toThrow(/UNEXPECTED_ASSET/);
+    expect(client.closed).toBe(true);
+    expect(calls).toHaveLength(1);
+  });
+
+  it("rejects tampered challenge with wrong payee", async () => {
+    const tampered = {
+      ...paidChallenge,
+      accepts: [{ ...paidChallenge.accepts[0], payTo: "0x1111111111111111111111111111111111111111" }]
+    };
+    const { client, calls } = mockPaidClient(tampered);
+    await expect(
+      runPaidBuyer({
+        env: VALID_ENV,
+        createClient: () => client,
+        createTransport: () => ({})
+      })
+    ).rejects.toThrow(/UNEXPECTED_PAYEE/);
+    expect(client.closed).toBe(true);
+    expect(calls).toHaveLength(1);
+  });
+
+  it("aborts if confirmation is declined", async () => {
+    const { client, calls } = mockPaidClient();
+    const output: unknown[] = [];
+
+    await runPaidBuyer({
+      env: VALID_ENV,
+      createClient: () => client,
+      createTransport: () => ({}),
+      confirm: async () => false,
+      log: (line) => output.push(line)
+    });
+
+    expect(client.closed).toBe(true);
+    expect(calls).toHaveLength(1);
+    expect(output).toContainEqual({ aborted: true, reason: "Payment confirmation declined" });
+  });
+
+  it("completes paid flow on valid challenge with mock, logging sanitized receipt", async () => {
+    const { client, calls } = mockPaidClient();
+    const output: unknown[] = [];
+
+    await runPaidBuyer({
+      env: VALID_ENV,
+      createClient: () => client,
+      createTransport: () => ({}),
+      confirm: async () => true,
+      log: (line) => output.push(line)
+    });
+
+    expect(client.connected).toBe(true);
+    expect(client.closed).toBe(true);
+    expect(calls).toHaveLength(2);
+    expect(output).toEqual([
+      {
+        verdict: "verified",
+        request_id: "req-paid-123",
+        receipt: {
+          success: true,
+          transaction: "0xmocktx123",
+          network: "eip155:84532",
+          payer: "0xmockpayer123"
+        }
+      }
+    ]);
+    const serialized = JSON.stringify(output);
+    expect(serialized).not.toContain(VALID_ENV.BUYER_PRIVATE_KEY);
+    expect(serialized).not.toContain("must-never-be-logged");
+    expect(serialized).not.toContain(SYNTHETIC_REQUEST.content);
   });
 });

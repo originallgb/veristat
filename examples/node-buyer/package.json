@@ -2,12 +2,18 @@
   "name": "veristat-node-buyer-example",
   "private": true,
   "version": "0.1.0",
-  "description": "No-payment Veristat MCP buyer example",
+  "description": "Veristat MCP buyer example",
   "type": "module",
   "engines": { "node": ">=22" },
-  "scripts": { "unpaid": "node unpaid.mjs" },
+  "scripts": {
+    "unpaid": "node unpaid.mjs",
+    "paid": "node paid-base-sepolia.mjs"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",
-    "undici": "8.7.0"
+    "@x402/evm": "2.18.0",
+    "agents": "0.17.3",
+    "undici": "8.7.0",
+    "viem": "^2.55.0"
   }
 }
