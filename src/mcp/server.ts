@@ -19,13 +19,11 @@ import { logRequest, logSettlement } from "../logging";
 import { VERSION } from "../version";
 
 const CONSENSUS_DESCRIPTION =
-  "Independent multi-model verification of a claim, answer, plan, or code change. " +
-  "The current MVP fans your input to 3 heterogeneous frontier models (cross-vendor) and returns a structured verdict: " +
-  "consensus level, points of agreement, contradictions with reasoning, and dissenting positions. " +
-  "panel_size 5 remains accepted for compatibility but is fulfilled and quoted as a 3-panel check. " +
-  "Privacy: submitted content, context, and question are sent to Anthropic, OpenAI, and Google for the panel; content and panel outputs are then sent to Anthropic for synthesis. " +
-  "Only cryptographic hashes and aggregate telemetry are stored, with zero raw input/output text retained. " +
-  "Use before high-stakes actions. Paid via x402.";
+  "Cross-vendor decision review across Anthropic, OpenAI, and Google. " +
+  "Structured verdict: consensus score, agreements, contradictions, dissent. " +
+  "panel_size 5 accepted for compatibility, fulfilled as 3-panel check. " +
+  "Zero raw input/output text retained (ADR-0004 privacy policy). " +
+  "Paid via x402.";
 
 export class VeristatMCP extends McpAgent<Env> {
   server = new McpServer({ name: "veristat", version: VERSION });

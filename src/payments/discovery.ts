@@ -43,7 +43,9 @@ export function consensusCheckDiscovery(
     example: {
       content:
         "Renaming a table in PostgreSQL with ALTER TABLE ... RENAME TO does not rewrite the table.",
-      question: "Is this claim correct?"
+      question: "Is this claim correct?",
+      panel_size: 3,
+      mode: "verify"
     },
     output: {
       example: {
