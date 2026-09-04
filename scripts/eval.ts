@@ -1,3 +1,4 @@
+import { realpathSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -342,7 +343,15 @@ async function main(): Promise<void> {
   throw new Error(`Unknown evaluation mode: ${mode}`);
 }
 
-const entrypoint = process.argv[1] ? pathToFileURL(process.argv[1]).href : "";
+const entrypoint = process.argv[1]
+  ? pathToFileURL((() => {
+      try {
+        return realpathSync(process.argv[1]);
+      } catch {
+        return process.argv[1];
+      }
+    })()).href
+  : "";
 if (import.meta.url === entrypoint) {
   main().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : "Unknown evaluation failure";

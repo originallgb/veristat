@@ -20,9 +20,11 @@ export interface RequestRecord {
   panelSize: number;
   promptVersion: string;
   synthesisVersion: string;
-  inputJson: string; // content/context/question — no payer identity
-  panelJson: string; // raw panel outputs + latencies
-  verdictJson: string;
+  inputHash: string;
+  verdictLabel: string;
+  consensusScore?: number | null;
+  totalTokens: number;
+  modelCount: number;
   degraded: boolean;
   totalLatencyMs: number;
 }
@@ -46,15 +48,26 @@ export async function logRequest(db: D1Database, r: RequestRecord): Promise<void
     await db
       .prepare(
         `INSERT INTO requests (request_id, tool, mode, panel_size, prompt_version, synthesis_version,
-            input_json, panel_json, verdict_json, degraded, total_latency_ms, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+            input_hash, verdict_label, consensus_score, total_tokens, model_count, degraded, total_latency_ms, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
       )
       .bind(
         r.requestId, r.tool, r.mode, r.panelSize, r.promptVersion, r.synthesisVersion,
-        r.inputJson, r.panelJson, r.verdictJson, r.degraded ? 1 : 0, r.totalLatencyMs
+        r.inputHash, r.verdictLabel, r.consensusScore ?? null, r.totalTokens, r.modelCount, r.degraded ? 1 : 0, r.totalLatencyMs
       )
       .run();
   } catch (e) {
     console.error("request log failed", r.requestId, e);
+  }
+}
+
+export async function deleteRequestData(db: D1Database, requestId: string): Promise<void> {
+  try {
+    await db
+      .prepare(`DELETE FROM requests WHERE request_id = ?`)
+      .bind(requestId)
+      .run();
+  } catch (e) {
+    console.error("request delete failed", requestId, e);
   }
 }

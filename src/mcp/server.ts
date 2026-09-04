@@ -24,7 +24,7 @@ const CONSENSUS_DESCRIPTION =
   "consensus level, points of agreement, contradictions with reasoning, and dissenting positions. " +
   "panel_size 5 remains accepted for compatibility but is fulfilled and quoted as a 3-panel check. " +
   "Privacy: submitted content, context, and question are sent to Anthropic, OpenAI, and Google for the panel; content and panel outputs are then sent to Anthropic for synthesis. " +
-  "The current service stores the full submission, raw panel outputs, and verdict in D1 without automatic expiry, and the request_id can link that row to the payer wallet stored with its settlement. " +
+  "Only cryptographic hashes and aggregate telemetry are stored, with zero raw input/output text retained. " +
   "Use before high-stakes actions. Paid via x402.";
 
 export class VeristatMCP extends McpAgent<Env> {
@@ -118,6 +118,16 @@ export class VeristatMCP extends McpAgent<Env> {
           cost_usd: settlement.priceUSD
         };
 
+        const inputString = JSON.stringify({
+          content: args.content,
+          context: args.context,
+          question: args.question
+        });
+        const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(inputString));
+        const inputHash = Array.from(new Uint8Array(hashBuffer))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+
         await logRequest(env.DB, {
           requestId: settlement.requestId,
           tool: "consensus_check",
@@ -125,13 +135,11 @@ export class VeristatMCP extends McpAgent<Env> {
           panelSize: 3,
           promptVersion: PANEL_PROMPT_VERSION,
           synthesisVersion: SYNTHESIS_PROMPT_VERSION,
-          inputJson: JSON.stringify({
-            content: args.content,
-            context: args.context,
-            question: args.question
-          }),
-          panelJson: JSON.stringify(outcome.results),
-          verdictJson: JSON.stringify(verdict),
+          inputHash,
+          verdictLabel: verdict.verdict,
+          consensusScore: verdict.consensus_score,
+          totalTokens: 0,
+          modelCount: outcome.succeeded.length,
           degraded: outcome.degraded,
           totalLatencyMs: Date.now() - started
         });
