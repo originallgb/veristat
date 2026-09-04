@@ -7,3 +7,4 @@ dist/
 .claude/settings.local.json
 .claude/worktrees/*/
 .wallets/
+backup*.sql
