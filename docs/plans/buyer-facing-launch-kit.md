@@ -1,7 +1,16 @@
 # Buyer-Facing Launch Kit & First-Ten Outreach Pack
 
 Issue #16 Specification & Implementation Plan.  
-Philosophy: Ruthless minimalism (Ponytail ethos). Zero marketing fluff, high signal-to-noise, strict technical truth, and explicit boundary disclosures.
+Philosophy: Ruthless minimalism. Zero marketing fluff, high signal-to-noise, strict technical truth, and explicit boundary disclosures.
+
+> [!IMPORTANT]
+> **Evidence Gating Rule**: Any claims of functionality, performance, or results are strictly gated behind at least two (2) verified evidence artefacts.
+
+> [!WARNING]
+> **Brand & Identity Status**: "Veristat" is a legacy working title, replaced by "Mathesis" (ADR-0005). Executing the public-surface migration requires its own program and decision records. This migration is a blocking issue to any launch or public cataloging, but is NOT a priority during alpha.
+
+> [!NOTE]
+> **Staging Endpoint**: `https://veristat.grant-23a.workers.dev/mcp` is strictly a **[STAGING / REHEARSAL ONLY]** endpoint. It is NOT a production domain.
 
 All external submissions, directory registrations, pull requests, and outreach messages require explicit human operator approval before execution.
 
@@ -13,8 +22,9 @@ All text below is calibrated to exact platform schemas and limits.
 
 ### Official MCP Registry (`server.json` & Catalog View)
 - **Registry Namespace**: `io.github.originallgb/veristat`
-- **Transport**: `streamable-http` (`https://veristat.grant-23a.workers.dev/mcp`)
+- **Transport**: `streamable-http` (`https://veristat.grant-23a.workers.dev/mcp` [STAGING / REHEARSAL ONLY])
 - **Schema**: `https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json`
+- **Specification Status**: Implementing the latest MCP specification is recorded as a priority backlog item.
 
 #### Short Description (`server.json:description`)
 ```text
@@ -24,9 +34,9 @@ Cross-vendor AI panel that verifies claims and drafts with structured consensus 
 
 #### Full Description (Catalog Detail View)
 ```text
-Veristat provides cross-vendor decision review for high-stakes agent workflows. Instead of correlated self-grading, inputs are evaluated concurrently across a heterogeneous panel of frontier models (Anthropic, OpenAI, Google) followed by a structured synthesis pass. Emits schema-enforced consensus scores, agreements, contradictions, and dissents via streamable HTTP. Settles per-request at $0.50 USDC on Base via x402. Zero raw text stored (ADR-0004 SHA-256 hashed). Free sample verdict included.
+Veristat provides cross-vendor decision review for high-stakes agent workflows. Instead of correlated self-grading, inputs are evaluated concurrently across a panel of frontier models (Claude Sonnet, GPT-5 mini, Gemini Flash) with a structured synthesis pass. Emits schema-enforced consensus scores, agreements, contradictions, and dissents via streamable HTTP. Settles per-request at $0.50 USDC on Base via x402. Zero raw text stored (ADR-0004 SHA-256 hashed). Free sample verdict included.
 ```
-- **Character Count**: 496 characters (Limit: <= 500 chars).
+- **Character Count**: 489 characters (Limit: <= 500 chars).
 
 ---
 
@@ -46,7 +56,7 @@ Target File: `README.md` (Services / Tools Table)
 ```yaml
 startCommand:
   type: streamable-http
-  url: https://veristat.grant-23a.workers.dev/mcp
+  url: https://veristat.grant-23a.workers.dev/mcp # [STAGING / REHEARSAL ONLY]
 ```
 
 #### Install / Run Snippet
@@ -65,7 +75,7 @@ npx -y @smithery/cli install io.github.originallgb/veristat --client claude
 ```markdown
 Veristat gives autonomous agents a second, independent opinion before executing irreversible actions.
 
-Instead of self-grading against the generating model, Veristat fans inputs to an independent, cross-vendor panel of frontier models (Anthropic, OpenAI, and Google) with an Anthropic synthesis pass.
+Instead of self-grading against the generating model, Veristat fans inputs to an independent, cross-vendor panel of frontier models (Claude Sonnet, GPT-5 mini, and Gemini Flash) with a Claude Sonnet synthesis pass.
 
 ### Features
 - **Tools**: `consensus_check` (paid verification), `get_sample_verdict` (free discovery).
@@ -73,7 +83,7 @@ Instead of self-grading against the generating model, Veristat fans inputs to an
 - **Payment**: $0.50 USDC per check on Base via x402 protocol (EIP-3009 transfer authorization). No subscriptions or API keys required.
 - **Zero-Toxic-Waste Privacy (ADR-0004)**: Inputs are SHA-256 hashed. Zero raw input or verdict text is stored in server databases.
 ```
-- **Markdown Description Length**: 874 characters.
+- **Markdown Description Length**: 888 characters.
 
 ---
 
@@ -82,12 +92,12 @@ Instead of self-grading against the generating model, Veristat fans inputs to an
 - **Title**: Veristat
 - **Tagline**: Cross-vendor decision review for high-stakes agent actions
   - *Tagline Length*: 58 characters.
-- **Transport**: `streamable-http` (`https://veristat.grant-23a.workers.dev/mcp`)
+- **Transport**: `streamable-http` (`https://veristat.grant-23a.workers.dev/mcp` [STAGING / REHEARSAL ONLY])
 - **Overview**:
 ```markdown
-Veristat provides multi-vendor consensus verification for AI agents over MCP. Every request evaluates submitted content concurrently across Anthropic, OpenAI, and Google frontier models, synthesizing findings into explicit points of agreement, contradiction, and dissent. Billed per-request at $0.50 USDC on Base using x402. No vendor API keys needed.
+Veristat provides multi-vendor consensus verification for AI agents over MCP. Every request evaluates submitted content concurrently across Claude Sonnet, GPT-5 mini, and Gemini Flash frontier models, synthesizing findings into explicit points of agreement, contradiction, and dissent. Billed per-request at $0.50 USDC on Base using x402. No vendor API keys needed.
 ```
-- **Overview Length**: 352 characters.
+- **Overview Length**: 366 characters.
 
 ---
 
@@ -96,26 +106,34 @@ Veristat provides multi-vendor consensus verification for AI agents over MCP. Ev
 Used in the Bazaar resource declaration (`extensions.bazaar.info.description`) and x402scan catalog entry:
 
 ```text
-Cross-vendor decision review for high-stakes agent actions. Evaluates claims, plans, and code across an independent 3-model panel (Anthropic + OpenAI + Google) with an Anthropic synthesis pass. Returns structured verdicts: consensus score, agreements, contradictions, and model dissent. $0.50 USDC per check on Base via x402 exact scheme. Zero-Toxic-Waste privacy: inputs SHA-256 hashed, zero raw text stored. Call get_sample_verdict free or consensus_check to verify.
+Cross-vendor decision review for high-stakes agent actions. Evaluates claims, plans, and code across an independent 3-model panel (Claude Sonnet, GPT-5 mini, Gemini Flash) with an independent synthesis pass. Returns structured verdicts: consensus score, agreements, contradictions, and dissent. $0.50 USDC per check on Base via x402 exact scheme. Zero-Toxic-Waste privacy: inputs SHA-256 hashed, zero raw text stored. Call get_sample_verdict free or consensus_check to verify.
 ```
-- **Character Count**: 466 characters (Limit: strictly <= 500 chars).
+- **Character Count**: 474 characters (Limit: strictly <= 500 chars).
 
 ---
 
 ## 2. Approved Positioning & Boundary Disclosures
 
-### Core Value Line
-> "Cross-vendor decision review for high-stakes agent outputs."
+### Core Architecture & Positioning (Alpha Info-Log Format)
+```text
+[INFO] [POSITIONING] Subsystem initialized: multi_model_verification
+[INFO] [POSITIONING] Target: High-stakes agent workflow outputs
+[INFO] [POSITIONING] Mode: Heterogeneous 3-model evaluation + independent synthesis pass
+[INFO] [POSITIONING] Failure model addressed: Vendor-correlated self-grading bias and single-model blind spots
+[INFO] [POSITIONING] Output format: Schema-enforced consensus score, agreements, contradictions, and dissents
+[INFO] [POSITIONING] Primary models: Claude Sonnet, GPT-5 mini, Gemini Flash
+[INFO] [POSITIONING] Alpha style: Flat info-log format (stylistic branding deferred to post-alpha)
+```
 
-A model cannot reliably grade its own high-stakes conclusions. Correlated failure modes across models from the same vendor produce blind spots. Veristat breaks correlation by enforcing a strict heterogeneous 3-model panel plus an independent synthesis pass.
+A model cannot reliably grade its own high-stakes conclusions. Correlated failure modes across models from the same lineage produce blind spots. The system breaks correlation by dispatching across foundation models (`Claude Sonnet`, `GPT-5 mini`, `Gemini Flash`) plus an independent synthesis pass.
 
 ### Technical Architecture
-- **Panel Composition**: Exactly 3 frontier models from 3 independent vendors:
-  - Anthropic (`claude-sonnet`)
-  - OpenAI (`gpt-mini` / frontier peer)
-  - Google (`gemini-flash` / frontier peer)
-  *(Never two models from the same vendor).*
-- **Synthesis Pass**: Anthropic synthesis step that processes raw panel evaluations into a schema-enforced JSON verdict.
+- **Panel Composition**: Exactly 3 foundation models across frontier lineages:
+  - `Claude Sonnet` (Anthropic)
+  - `GPT-5 mini` (OpenAI / frontier peer)
+  - `Gemini Flash` (Google / frontier peer)
+  *(Primary emphasis on specific foundation models over parent labs; never two models from the same lineage).*
+- **Synthesis Pass**: `Claude Sonnet` synthesis pass that processes raw panel evaluations into a schema-enforced JSON verdict.
 - **Timeout**: Strict 60-second ceiling across parallel panel evaluation.
 - **Degraded Execution**: If a panelist drops or times out, the synthesis returns a verdict flagged `panel_degraded` with remaining models.
 
@@ -128,15 +146,17 @@ A model cannot reliably grade its own high-stakes conclusions. Correlated failur
 
 ### Privacy Policy (ADR-0004 Zero-Toxic-Waste)
 - **Zero Raw Text Persistence**: Prompt text, code snippets, claims, panel reasoning, and full verdict text are **never written to persistent disk or D1 storage**.
+- **Alpha Lifecycle Acceptance**: Zero raw text persistence is accepted for alpha. System design fundamentals and data retention architectures will be formally revisited post-alpha with dedicated resources informed by observed user and market shape.
 - **Cryptographic Hashing**: User inputs are hashed via SHA-256 (`input_hash`) for telemetry and deduplication.
 - **Telemetry Only**: D1 records only operational metadata: `input_hash`, `verdict_label` (`verified` | `contested` | `inconclusive`), numeric `consensus_score`, token counts, latency, and `model_count`.
 - **Scrubbing**: The `deleteRequestData` utility allows purging operational metadata records by `input_hash` or `request_id`.
 
-### Negative Boundaries (What Veristat Is NOT)
+### Negative Boundaries & Product Hypotheses (What Veristat Is NOT)
 - **No Live 5-Model Panel**: Currently fulfilled and billed strictly as 3-model panels.
 - **No Automatic Refunds**: Settlement occurs only after a successful verdict synthesis. If the panel fails, x402 settlement is not executed. Settled payments are non-refundable.
 - **No Signed Certificates**: Verdicts are structured JSON execution results; they are not cryptographic validity proofs or legal attestations.
 - **No Live Web Search / Citations**: `research_fanout` is explicitly `NOT_AVAILABLE` (stubbed). Veristat reviews logic, safety, code, and claims against model frontier reasoning, not live internet browsing.
+- **Discovery Hypothesis**: Client research indicates the buyer is likely purchasing verifiable *proof of the verdict being made* (derivation trail, independent consensus check, diligence record) rather than merely the verdict itself.
 
 ---
 
@@ -170,7 +190,7 @@ interface ConsensusVerdict {
 
 export async function verifyPreTradeSafety(trade: TradePlan, buyerPrivateKey: `0x${string}`): Promise<boolean> {
   const transport = new StreamableHTTPClientTransport(
-    new URL("https://veristat.grant-23a.workers.dev/mcp")
+    new URL("https://veristat.grant-23a.workers.dev/mcp") // [STAGING / REHEARSAL ONLY]
   );
   const client = new Client({ name: "defi-guard-agent", version: "1.0.0" });
   await client.connect(transport);
@@ -229,7 +249,7 @@ export async function reviewMigration(
   buyerPrivateKey: `0x${string}`
 ): Promise<MigrationReviewResult> {
   const transport = new StreamableHTTPClientTransport(
-    new URL("https://veristat.grant-23a.workers.dev/mcp")
+    new URL("https://veristat.grant-23a.workers.dev/mcp") // [STAGING / REHEARSAL ONLY]
   );
   const client = new Client({ name: "devops-gate-agent", version: "1.0.0" });
   await client.connect(transport);
@@ -283,7 +303,7 @@ export async function verifyResearchClaim(
   buyerPrivateKey: `0x${string}`
 ): Promise<{ consensusScore: number; passes: boolean; dissentSummary: string }> {
   const transport = new StreamableHTTPClientTransport(
-    new URL("https://veristat.grant-23a.workers.dev/mcp")
+    new URL("https://veristat.grant-23a.workers.dev/mcp") // [STAGING / REHEARSAL ONLY]
   );
   const client = new Client({ name: "research-verifier-agent", version: "1.0.0" });
   await client.connect(transport);
@@ -334,7 +354,7 @@ npm run unpaid
 ```
 
 ### What This Proves (Zero Financial Risk)
-1. **MCP Initialization**: Handshakes with `https://veristat.grant-23a.workers.dev/mcp` over `streamable-http`.
+1. **MCP Initialization**: Handshakes with `https://veristat.grant-23a.workers.dev/mcp` [STAGING / REHEARSAL ONLY] over `streamable-http`.
 2. **Tool Discovery**: Validates presence of `consensus_check` and `get_sample_verdict`.
 3. **Free Sample Inspection**: Invokes `get_sample_verdict` without billing. Returns the current three-panel methodology, service version, price card ($0.50 / 3-panel fulfilled), and a complete sample verdict.
 4. **Unpaid 402 Challenge Validation**: Sends a synthetic request to `consensus_check`. Asserts that the server returns an x402 HTTP 402 challenge with:
@@ -451,7 +471,7 @@ Hey [Name] — saw your work on [Project/Agent].
 
 One recurring failure mode in autonomous trading agents is correlated hallucination: a single model misinterpreting liquidity depth or slippage parameters and executing an irreversible swap.
 
-We built Veristat (MCP server over x402). It runs high-stakes decisions through a 3-vendor panel (Anthropic + OpenAI + Google) with an independent synthesis pass. It returns a structured JSON verdict with explicit points of contradiction and dissent.
+We built Veristat (MCP server over x402). It runs high-stakes decisions through a 3-model panel (Claude Sonnet + GPT-5 mini + Gemini Flash) with an independent synthesis pass. It returns a structured JSON verdict with explicit points of contradiction and dissent.
 
 It settles at $0.50 USDC on Base per check via x402 (no accounts, no subscriptions, payment is the credential).
 
@@ -465,13 +485,13 @@ If you'd like a testnet credit to test live with your agent harness, let me know
 
 #### Template 2: For Autonomous DevOps & Coding Tools
 ```text
-Subject: Independent 3-vendor safety review for agent code/DDL migrations
+Subject: Independent 3-model safety review for agent code/DDL migrations
 
 Hey [Name] — quick question regarding [Tool/Project].
 
 When coding agents generate destructive actions (e.g. database migrations, infrastructure scripts, security rules), self-grading with the same model often misses subtle operational locks (e.g. PostgreSQL CREATE INDEX without CONCURRENTLY).
 
-Veristat is a lightweight MCP tool that fans proposals across three independent frontier models (Claude, GPT, Gemini) to catch vendor-specific blind spots. It produces structured consensus verdicts detailing agreements and specific model dissents.
+Veristat is a lightweight MCP tool that fans proposals across three independent frontier models (Claude Sonnet, GPT-5 mini, Gemini Flash) to catch lineage-specific blind spots. It produces structured consensus verdicts detailing agreements and specific model dissents.
 
 Key boundaries:
 - Flat $0.50 USDC per review on Base via x402.
@@ -486,13 +506,13 @@ Happy to hop on a quick thread or PR an integration snippet if of interest.
 
 #### Template 3: For Agent Framework Maintainers
 ```text
-Subject: Cross-vendor consensus tool for [Framework] tool ecosystem
+Subject: Cross-model consensus tool for [Framework] tool ecosystem
 
 Hey [Name] —
 
 We put together an MCP integration for [Framework] agents that need an un-correlated second opinion before taking high-stakes actions.
 
-Rather than having an agent re-prompt itself, Veristat fans the input across Anthropic, OpenAI, and Google simultaneously and returns a schema-enforced consensus score, agreements, and contradictions.
+Rather than having an agent re-prompt itself, Veristat fans the input across Claude Sonnet, GPT-5 mini, and Gemini Flash simultaneously and returns a schema-enforced consensus score, agreements, and contradictions.
 
 Integration details:
 - Standard MCP streamable HTTP transport (`/mcp`).
@@ -540,7 +560,7 @@ Templates for updating directory metadata, issuing incident advisories, or rolli
 [Update] Veristat MCP Server (io.github.originallgb/veristat)
 
 Release: v1.0.0
-Endpoint: https://veristat.grant-23a.workers.dev/mcp
+Endpoint: https://veristat.grant-23a.workers.dev/mcp [STAGING / REHEARSAL ONLY]
 Transport: streamable-http
 
 Summary of Changes:
@@ -563,14 +583,14 @@ Affected Service: consensus_check (MCP tool)
 Time Range: [START_UTC] to [END_UTC]
 
 Details:
-One or more upstream frontier model providers (Anthropic / OpenAI / Google) are experiencing elevated error rates or scheduled maintenance.
+One or more upstream frontier model providers (Claude / GPT / Gemini lineages) are experiencing elevated error rates or scheduled maintenance.
 
 Fail-Closed Safeguard:
-Veristat requires 3 independent vendors to generate a complete consensus verdict.
-- Requests unable to assemble a 3-vendor panel will return tool error: "PANEL_UNAVAILABLE".
+Veristat requires 3 independent foundation models to generate a complete consensus verdict.
+- Requests unable to assemble a 3-model panel will return tool error: "PANEL_UNAVAILABLE".
 - In accordance with our payment terms, UNFULFILLED REQUESTS ARE NEVER SETTLED ON-CHAIN. No USDC is deducted from buyer wallets when an outage occurs.
 
-Tracking: Monitor https://veristat.grant-23a.workers.dev/health for live service status.
+Tracking: Monitor https://veristat.grant-23a.workers.dev/health [STAGING / REHEARSAL ONLY] for live service status.
 ```
 
 ### Deprecation & Rollback Notice Template
@@ -579,7 +599,7 @@ Tracking: Monitor https://veristat.grant-23a.workers.dev/health for live service
 
 Affected Version / Endpoint: [VERSION / ENDPOINT_URL]
 Effective Date: [DATE]
-Replacement Endpoint: https://veristat.grant-23a.workers.dev/mcp
+Replacement Endpoint: https://veristat.grant-23a.workers.dev/mcp [STAGING / REHEARSAL ONLY]
 
 Reason for Action:
 [Contract migration / Vulnerability mitigation / Schema version retirement]
