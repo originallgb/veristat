@@ -24,7 +24,7 @@ Coinbase CDP facilitator. D1 `veristat` is wired to
 `63379492-64ce-48a0-b39a-82aa54726dae`; `PAY_TO_ADDRESS` is the throwaway
 testnet receiver `0x86CdAe1A22458442BaB9E10216a7E96b606d3635`, not the future
 mainnet receiver. The active Worker version is
-`7874ca15-2abf-4006-af13-d27fbdb54b47`.
+`26d30f8c-4241-4e92-8cbc-52416fd1a003` (deployed 2026-09-04).
 
 Three discovery-bearing payments settled. The final controlled diagnostic
 returned Bazaar status `processing` twice, but the resource remained absent
@@ -55,7 +55,7 @@ The payment layer and the product pipeline are deliberately decoupled:
 - **`src/mcp/server.ts` — `VeristatMCP` (McpAgent / Durable Object)** wires tools to the gate. MVP accepts `panel_size: 5` and `mode: adversarial` but hard-routes quoting to 3-panel. `research_fanout`/`get_research_result` are intentional stubs returning `NOT_AVAILABLE`.
 - **`src/panel/`** — `providers.ts` (raw fetch clients; vendor diversity is mandatory — never two models from one vendor), `orchestrator.ts` (parallel fan-out, 60s ceiling, degrades at 2/3 with `panel_degraded` flag), `synthesis.ts` (one extra model call, output parsed against `verdictSchema`).
 - **`src/prompts/`** — versioned prompt modules; the version string is logged with every request. New prompt = new file (`panel_v2.ts`), never edit-in-place.
-- **`src/logging.ts` + `migrations/`** — D1: `settlements` (demand proof, including payer) and `requests` (full submission/panel/verdict for the eval flywheel). The shared request ID makes the tables joinable; see the unresolved privacy/retention plan. Logging must never fail a paid request; errors are swallowed.
+- **`src/logging.ts` + `migrations/`** — D1: `settlements` (demand proof, including payer) and `requests` (input hash, verdict label and aggregate metrics only; no raw text under ADR-0004). The shared request ID makes the tables joinable. Logging must never fail a paid request; errors are swallowed.
 - **`src/index.ts`** — Hono for `/`, `/health`, `/price`; `/mcp` is routed to the McpAgent before Hono.
 
 ## Deployment

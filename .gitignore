@@ -8,3 +8,8 @@ dist/
 .claude/worktrees/*/
 .wallets/
 backup*.sql
+# Local evidence and agent logs stay out of the public repository
+docs/session-logs/
+docs/agentic/
+docs/context/worktrees.md
+.remember/

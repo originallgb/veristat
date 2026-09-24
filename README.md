@@ -2,6 +2,12 @@
 
 x402-paid multi-model verification MCP server on Cloudflare Workers.
 
+> **Status: public work in progress.** The service runs on the Base Sepolia
+> testnet only. Mainnet, registry publication and outreach are not launched.
+> `veristat` is a working name; a rename is planned before any public product
+> launch (`docs/decisions/0005-select-mathesa-masterbrand.md`). See
+> [About this repository](#about-this-repository).
+
 An agent submits a claim, plan, or draft; veristat fans it to a heterogeneous
 panel of frontier models (Anthropic + OpenAI + Google — never two from the same
 vendor), synthesizes a structured verdict (consensus, agreements, contradictions,
@@ -20,14 +26,14 @@ wallet runbook) · `docs/RUNBOOK.md` (ops, incl. CI/CD)
 
 ## Current deployment
 
-As of 2026-07-16, veristat is deployed for a **Base Sepolia rehearsal**:
+As of 2026-09-04, veristat is deployed for a **Base Sepolia rehearsal**:
 
 - MCP endpoint: `https://veristat.grant-23a.workers.dev/mcp`
 - Network: `eip155:84532`
 - Facilitator: `https://api.cdp.coinbase.com/platform/v2/x402`
 - D1 database: `veristat` (`63379492-64ce-48a0-b39a-82aa54726dae`)
 - Testnet receiver: `0x86CdAe1A22458442BaB9E10216a7E96b606d3635`
-- Active Worker version: `7874ca15-2abf-4006-af13-d27fbdb54b47`
+- Active Worker version: `26d30f8c-4241-4e92-8cbc-52416fd1a003` (deployed 2026-09-04)
 
 Three discovery-bearing testnet payments have settled. The final controlled
 diagnostic returned `{"bazaar":{"status":"processing"}}` on both verify and
@@ -63,12 +69,13 @@ operator explicitly records the narrow listing waiver in `docs/ROADMAP.md`.
   `src/prompts/`, version logged per request.
 - **Data handling and logging**: each submission is sent to Anthropic, OpenAI,
   and Google for the panel; the content and panel outputs are then sent to
-  Anthropic for synthesis. D1 currently stores the full submitted content,
-  context, and question, raw panel outputs, and full verdict in `requests`
-  without automatic expiry. `settlements` separately stores transaction hash,
-  payer wallet, and amount, but the shared `request_id` makes the records
-  joinable. Retention and buyer-control policy is intentionally unresolved; see
-  `docs/plans/privacy-and-retention.md` before submitting sensitive material.
+  Anthropic for synthesis. Under ADR-0004 (zero-toxic-waste), D1 does not store
+  submitted text, raw panel outputs or verdict bodies. `requests` holds a
+  SHA-256 input hash, verdict label, consensus score, token count, model count,
+  latency and prompt versions. `settlements` stores transaction hash, payer
+  wallet and amount, joinable to `requests` by `request_id`. See
+  `docs/decisions/0004-privacy-retention-policy.md` and
+  `docs/plans/privacy-and-retention.md`.
 
 ## Deployment configuration
 
@@ -148,3 +155,19 @@ npx wrangler d1 execute veristat --remote --command \
 - **One-liner**: An independent second opinion a model cannot give itself, in one paid call with zero account setup.
 - **Endpoint**: `https://veristat.grant-23a.workers.dev/mcp` (x402, USDC on Base, exact scheme)
 - **Discovery**: free `get_sample_verdict` tool returns a real verdict, methodology, and price card.
+
+## About this repository
+
+This is a learning-in-public work in progress, published as-is.
+
+- **History.** The commit history was rewritten before publication to remove
+  local machine paths, agent session logs and tool attribution trailers. No
+  credentials were ever committed; the full history was scanned with gitleaks.
+- **Issue numbers.** References such as `#14` in `docs/` point to the private
+  development tracker and do not resolve in this repository.
+- **Agent-oriented docs.** `AGENTS.md`, `CLAUDE.md` and much of `docs/` are
+  written for the coding agents that help build this. "Operator" means the
+  maintainer.
+- **Security.** See `SECURITY.md`. Please report vulnerabilities privately.
+- **Licence.** No licence is granted. The code is published for reading and
+  reference; all rights reserved.

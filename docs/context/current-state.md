@@ -1,5 +1,14 @@
 # Current state — 2026-08-01
 
+> **Update 2026-09-24 (public release).** This snapshot predates the
+> 2026-09-04 deployment. Since then: the reviewed public contract was deployed
+> to Base Sepolia as Worker version `26d30f8c-4241-4e92-8cbc-52416fd1a003`
+> (rollback `7874ca15`), the `/price` mismatch below is resolved, and
+> migration `0003_privacy_retention.sql` was applied remotely, so D1 no longer
+> holds raw submission text. The repository was published as a WIP under
+> `docs/decisions/0006-publish-repository-before-rename.md`. Session logs and
+> worktree records referenced below were kept out of the public history.
+
 This is the compact pickup document for humans and agents. Operational truth
 lives here, in `docs/ROADMAP.md`, and in `wrangler.jsonc`; `docs/SPEC.md`
 remains the historical product/build decision record.
@@ -127,13 +136,12 @@ signatures/payloads, quote tokens, prompts, or verdict bodies.
 - Agent instructions are tracked in `AGENTS.md`, `CLAUDE.md`, `.agents/`,
   `.claude/`, and `.codex/`.
 - Live nested worktree checkouts are Git runtime state and are not added to
-  the parent repository as embedded gitlinks. Their durable branch/commit
-  references are recorded in `docs/context/worktrees.md`.
+  the parent repository as embedded gitlinks.
 - `.claude/settings.local.json`, `.wallets/`, `.dev.vars`, raw logs, and
   `.remember/tmp` remain ignored because they can contain credentials or
   machine-local runtime state.
-- Curated context and session evidence belongs under `docs/context/` and
-  `docs/session-logs/`.
+- Curated context belongs under `docs/context/`. Session evidence is written
+  to `docs/session-logs/`, which is ignored in the public repository.
 
 ## Resume commands
 
@@ -147,7 +155,7 @@ VERISTAT_URL=https://veristat.grant-23a.workers.dev/mcp \
   NETWORK=eip155:84532 E2E_UNPAID_ONLY=1 node scripts/e2e.mjs
 ```
 
-See `docs/session-logs/2026-07-16-bazaar-controlled-rehearsal.md` for the paid
-diagnostic evidence and `docs/decisions/0001-bazaar-before-mainnet.md` for the
+The paid diagnostic evidence is summarised above and in x402-foundation/x402#2112;
+see `docs/decisions/0001-bazaar-before-mainnet.md` for the
 gate rationale. `docs/plans/prelaunch-unblocked-backlog.md` records the next
 unblocked slices, including the privacy/retention decision and buyer pack.

@@ -253,8 +253,8 @@ The project should not spend another cycle adding panels, research tools, dashbo
 - `docs/plans/privacy-and-retention.md`
 - `docs/plans/buyer-integration-pack.md`
 - `docs/plans/prelaunch-unblocked-backlog.md`
-- `docs/session-logs/2026-07-22-project-up-to-speed.md`
-- GitHub issues #3-#11 in `originallgb/veristat`
+- A private session log (not included in the public repository)
+- GitHub issues #3-#11 in the private development tracker
 - x402-foundation/x402 issue #2112, including Veristat evidence comments 4993727120 and 4994040237
 
 This review distinguishes verified current evidence from planned work. It made no deployment, paid call, registry publication, secret-store change, privacy decision, mainnet change, or external post.
