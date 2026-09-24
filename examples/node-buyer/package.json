@@ -13,7 +13,7 @@
     "@modelcontextprotocol/sdk": "1.29.0",
     "@x402/evm": "2.18.0",
     "agents": "0.17.3",
-    "undici": "8.7.0",
+    "undici": "8.9.0",
     "viem": "^2.55.0"
   }
 }
