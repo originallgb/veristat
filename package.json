@@ -18,7 +18,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "FSL-1.1-MIT",
   "type": "module",
   "dependencies": {
     "@coinbase/cdp-sdk": "1.52.0",

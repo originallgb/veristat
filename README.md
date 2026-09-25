@@ -169,5 +169,11 @@ This is a learning-in-public work in progress, published as-is.
   written for the coding agents that help build this. "Operator" means the
   maintainer.
 - **Security.** See `SECURITY.md`. Please report vulnerabilities privately.
-- **Licence.** No licence is granted. The code is published for reading and
-  reference; all rights reserved.
+- **Licence.** Split by audience (ADR-0007):
+  - The service (everything outside `examples/`) is under the
+    [Functional Source License 1.1, MIT Future License](LICENSE.md)
+    (`FSL-1.1-MIT`). You may use, modify and redistribute it for any purpose
+    except a competing commercial product or service. Each version becomes
+    MIT two years after it is published.
+  - The buyer example in `examples/node-buyer/` is [MIT](examples/node-buyer/LICENSE).
+    Copy it into your own agent freely.
