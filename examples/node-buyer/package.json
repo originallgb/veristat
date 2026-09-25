@@ -2,6 +2,7 @@
   "name": "veristat-node-buyer-example",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
   "description": "Veristat MCP buyer example",
   "type": "module",
   "engines": { "node": ">=22" },

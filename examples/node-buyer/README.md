@@ -111,3 +111,9 @@ and Bazaar transport). In paid mode, it logs a sanitized settlement receipt (tra
 `mcp-fetch.mjs` uses a dedicated `undici` dispatcher. Do not replace it with global `fetch`:
 on affected Node versions, an open MCP SSE stream can deadlock a same-origin request.
 The example's local dispatcher avoids that failure.
+
+## Licence
+
+This example is MIT-licensed (see `LICENSE`), unlike the rest of the
+repository, so you can copy it into your own agent without review. The Veristat
+service it calls is licensed separately under FSL-1.1-MIT.

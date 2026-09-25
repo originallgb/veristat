@@ -1,6 +1,6 @@
 # ADR-0006: Publish the repository before the rename
 
-Status: Accepted
+Status: Accepted. Superseded in part by ADR-0007 (licence).
 
 Date: 2026-09-24
 
