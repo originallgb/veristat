@@ -11,13 +11,10 @@
     "paid": "node paid-base-sepolia.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.32.1",
+    "@modelcontextprotocol/sdk": "1.32.0",
     "@x402/evm": "2.18.0",
     "agents": "0.17.3",
     "undici": "8.12.3",
     "viem": "^2.55.0"
-  },
-  "overrides": {
-    "@modelcontextprotocol/sdk": "1.32.1"
   }
 }
